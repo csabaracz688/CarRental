@@ -27,21 +27,10 @@ public class CarsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateCarDto dto)
+    //a CarDto-ot itt visszaraktam sima Car car-ra
+    //de maga a CreateCarDto jelen van meg a projektben ha kene kesobb, az Applications/Features mappaba
+    public async Task<IActionResult> Create([FromBody] Car car)
     {
-
-        var car = new Car
-        {
-            LicensePlate = dto.LicensePlate,
-            Brand = dto.Brand,
-            Model = dto.Model,
-            DistanceKm = dto.DistanceKm,
-            DailyPrice = dto.DailyPrice,
-
-            Status = CarStatus.Available,
-            Rentals = new List<Rental>()
-        };
-
         var created = await _cars.CreateAsync(car);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -55,12 +44,3 @@ public class CarsController : ControllerBase
         => await _cars.DeleteAsync(id) ? NoContent() : NotFound();
 }
 
-public class CreateCarDto
-{
-    public string LicensePlate { get; set; } = null!;
-    public string Brand { get; set; } = null!;
-    public string Model { get; set; } = null!;
-    public int DistanceKm { get; set; }
-    public int DailyPrice { get; set; }
-
-}
