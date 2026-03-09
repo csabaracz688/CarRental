@@ -1,9 +1,9 @@
 using CarRental.Infrastructure;
 using CarRental.Infrastructure.Persistence;
+using CarRental.Infrastructure.Persistence.Seeding;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +33,13 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<CarRentalDbContext>();
+    await dbContext.Database.MigrateAsync();
+
+    var initializer = scope.ServiceProvider.GetRequiredService<IAppDbInitializer>();
+    await initializer.InitializeAsync();
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
