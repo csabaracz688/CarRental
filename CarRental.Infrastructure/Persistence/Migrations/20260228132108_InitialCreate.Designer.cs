@@ -9,291 +9,290 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace CarRental.Infrastructure.Persistence.Migrations
+namespace CarRental.Infrastructure.Persistence.Migrations;
+
+[DbContext(typeof(CarRentalDbContext))]
+[Migration("20260228132108_InitialCreate")]
+partial class InitialCreate
 {
-    [DbContext(typeof(CarRentalDbContext))]
-    [Migration("20260228132108_InitialCreate")]
-    partial class InitialCreate
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.3")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+        modelBuilder
+            .HasAnnotation("ProductVersion", "10.0.3")
+            .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+        SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Car", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("CarRental.Domain.Entities.Car", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Brand")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Brand")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("DailyPrice")
-                        .HasColumnType("int");
+                b.Property<int>("DailyPrice")
+                    .HasColumnType("int");
 
-                    b.Property<int>("DistanceKm")
-                        .HasColumnType("int");
+                b.Property<int>("DistanceKm")
+                    .HasColumnType("int");
 
-                    b.Property<string>("LicensePlate")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("LicensePlate")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Model")
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                b.Property<int>("Status")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Cars");
-                });
+                b.ToTable("Cars");
+            });
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Invoice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("CarRental.Domain.Entities.Invoice", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Amount")
-                        .HasColumnType("int");
+                b.Property<int>("Amount")
+                    .HasColumnType("int");
 
-                    b.Property<DateTime>("IssuedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("IssuedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime?>("PaidAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<int>("RentalId")
-                        .HasColumnType("int");
+                b.Property<int>("RentalId")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("RentalId")
-                        .IsUnique();
+                b.HasIndex("RentalId")
+                    .IsUnique();
 
-                    b.ToTable("Invoices");
-                });
+                b.ToTable("Invoices");
+            });
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Rental", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("CarRental.Domain.Entities.Rental", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ApprovedByUserId")
-                        .HasColumnType("int");
+                b.Property<int?>("ApprovedByUserId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("CarId")
-                        .HasColumnType("int");
+                b.Property<int>("CarId")
+                    .HasColumnType("int");
 
-                    b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime?>("ClosedAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("EndDate")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("GuestEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                b.Property<string>("GuestEmail")
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("GuestName")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                b.Property<string>("GuestName")
+                    .HasMaxLength(150)
+                    .HasColumnType("nvarchar(150)");
 
-                    b.Property<string>("GuestPhone")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                b.Property<string>("GuestPhone")
+                    .HasMaxLength(30)
+                    .HasColumnType("nvarchar(30)");
 
-                    b.Property<DateTime?>("HandedOverAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime?>("HandedOverAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("StartDate")
+                    .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                b.Property<int>("Status")
+                    .HasColumnType("int");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                b.Property<int?>("UserId")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ApprovedByUserId");
+                b.HasIndex("ApprovedByUserId");
 
-                    b.HasIndex("CarId");
+                b.HasIndex("CarId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("Rentals");
-                });
+                b.ToTable("Rentals");
+            });
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("CarRental.Domain.Entities.Role", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("RoleType")
-                        .HasColumnType("int");
+                b.Property<int>("RoleType")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("RoleType")
-                        .IsUnique();
+                b.HasIndex("RoleType")
+                    .IsUnique();
 
-                    b.ToTable("Roles");
-                });
+                b.ToTable("Roles");
+            });
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Users", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("CarRental.Domain.Entities.Users", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Address")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
+                b.Property<string>("Address")
+                    .HasMaxLength(300)
+                    .HasColumnType("nvarchar(300)");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                b.Property<string>("Email")
+                    .IsRequired()
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("FirstName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                b.Property<string>("FirstName")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("LastName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                b.Property<string>("LastName")
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                b.Property<string>("Password")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("Phone")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                b.Property<string>("Phone")
+                    .HasMaxLength(30)
+                    .HasColumnType("nvarchar(30)");
 
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("UserName")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
+                b.HasIndex("Email")
+                    .IsUnique();
 
-                    b.HasIndex("UserName")
-                        .IsUnique();
+                b.HasIndex("UserName")
+                    .IsUnique();
 
-                    b.ToTable("Users");
-                });
+                b.ToTable("Users");
+            });
 
-            modelBuilder.Entity("RoleUsers", b =>
-                {
-                    b.Property<int>("RolesId")
-                        .HasColumnType("int");
+        modelBuilder.Entity("RoleUsers", b =>
+            {
+                b.Property<int>("RolesId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("UsersId")
-                        .HasColumnType("int");
+                b.Property<int>("UsersId")
+                    .HasColumnType("int");
 
-                    b.HasKey("RolesId", "UsersId");
+                b.HasKey("RolesId", "UsersId");
 
-                    b.HasIndex("UsersId");
+                b.HasIndex("UsersId");
 
-                    b.ToTable("UserRoles", (string)null);
-                });
+                b.ToTable("UserRoles", (string)null);
+            });
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Invoice", b =>
-                {
-                    b.HasOne("CarRental.Domain.Entities.Rental", "Rental")
-                        .WithOne("Invoice")
-                        .HasForeignKey("CarRental.Domain.Entities.Invoice", "RentalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("CarRental.Domain.Entities.Invoice", b =>
+            {
+                b.HasOne("CarRental.Domain.Entities.Rental", "Rental")
+                    .WithOne("Invoice")
+                    .HasForeignKey("CarRental.Domain.Entities.Invoice", "RentalId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Rental");
-                });
+                b.Navigation("Rental");
+            });
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Rental", b =>
-                {
-                    b.HasOne("CarRental.Domain.Entities.Users", "ApprovedByUser")
-                        .WithMany("ApprovedRent")
-                        .HasForeignKey("ApprovedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity("CarRental.Domain.Entities.Rental", b =>
+            {
+                b.HasOne("CarRental.Domain.Entities.Users", "ApprovedByUser")
+                    .WithMany("ApprovedRent")
+                    .HasForeignKey("ApprovedByUserId")
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("CarRental.Domain.Entities.Car", "Car")
-                        .WithMany("Rentals")
-                        .HasForeignKey("CarId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.HasOne("CarRental.Domain.Entities.Car", "Car")
+                    .WithMany("Rentals")
+                    .HasForeignKey("CarId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("CarRental.Domain.Entities.Users", "User")
-                        .WithMany("Rentals")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne("CarRental.Domain.Entities.Users", "User")
+                    .WithMany("Rentals")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("ApprovedByUser");
+                b.Navigation("ApprovedByUser");
 
-                    b.Navigation("Car");
+                b.Navigation("Car");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("User");
+            });
 
-            modelBuilder.Entity("RoleUsers", b =>
-                {
-                    b.HasOne("CarRental.Domain.Entities.Role", null)
-                        .WithMany()
-                        .HasForeignKey("RolesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("RoleUsers", b =>
+            {
+                b.HasOne("CarRental.Domain.Entities.Role", null)
+                    .WithMany()
+                    .HasForeignKey("RolesId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("CarRental.Domain.Entities.Users", null)
-                        .WithMany()
-                        .HasForeignKey("UsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                b.HasOne("CarRental.Domain.Entities.Users", null)
+                    .WithMany()
+                    .HasForeignKey("UsersId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Car", b =>
-                {
-                    b.Navigation("Rentals");
-                });
+        modelBuilder.Entity("CarRental.Domain.Entities.Car", b =>
+            {
+                b.Navigation("Rentals");
+            });
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Rental", b =>
-                {
-                    b.Navigation("Invoice");
-                });
+        modelBuilder.Entity("CarRental.Domain.Entities.Rental", b =>
+            {
+                b.Navigation("Invoice");
+            });
 
-            modelBuilder.Entity("CarRental.Domain.Entities.Users", b =>
-                {
-                    b.Navigation("ApprovedRent");
+        modelBuilder.Entity("CarRental.Domain.Entities.Users", b =>
+            {
+                b.Navigation("ApprovedRent");
 
-                    b.Navigation("Rentals");
-                });
+                b.Navigation("Rentals");
+            });
 #pragma warning restore 612, 618
-        }
     }
 }

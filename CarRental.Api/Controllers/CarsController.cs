@@ -1,4 +1,5 @@
 ﻿using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Features;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,7 @@ public class CarsController : ControllerBase
 {
     private readonly ICarManager _cars;
 
-    public CarsController(ICarManager cars)
-    {
-        _cars = cars;
-    }
+    public CarsController(ICarManager cars) => _cars = cars;
 
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await _cars.GetAllAsync());
@@ -27,17 +25,15 @@ public class CarsController : ControllerBase
     }
 
     [HttpPost]
-    //a CarDto-ot itt visszaraktam sima Car car-ra
-    //de maga a CreateCarDto jelen van meg a projektben ha kene kesobb, az Applications/Features mappaba
-    public async Task<IActionResult> Create([FromBody] Car car)
+    public async Task<IActionResult> Create([FromBody] CreateCarDto dto)
     {
-        var created = await _cars.CreateAsync(car);
+        var created = await _cars.CreateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] Car updated)
-        => await _cars.UpdateAsync(id, updated) ? NoContent() : NotFound();
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateCarDto dto)
+        => await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)

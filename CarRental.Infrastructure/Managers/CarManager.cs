@@ -1,5 +1,7 @@
 ﻿using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Features;
 using CarRental.Domain.Entities;
+using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,35 +11,79 @@ public class CarManager : ICarManager
 {
     private readonly CarRentalDbContext _db;
 
-    public CarManager(CarRentalDbContext db)
+    public CarManager(CarRentalDbContext db) => _db = db;
+
+    public async Task<List<CarResponseDto>> GetAllAsync(CancellationToken ct = default)
+        => await _db.Cars.AsNoTracking()
+            .OrderBy(c => c.Id)
+            .Select(c => new CarResponseDto
+            {
+                Id = c.Id,
+                LicensePlate = c.LicensePlate,
+                Brand = c.Brand,
+                Model = c.Model,
+                DistanceKm = c.DistanceKm,
+                DailyPrice = c.DailyPrice,
+                Status = (int)c.Status
+            })
+            .ToListAsync(ct);
+
+    public async Task<CarResponseDto?> GetByIdAsync(int id, CancellationToken ct = default)
+        => await _db.Cars.AsNoTracking()
+            .Where(c => c.Id == id)
+            .Select(c => new CarResponseDto
+            {
+                Id = c.Id,
+                LicensePlate = c.LicensePlate,
+                Brand = c.Brand,
+                Model = c.Model,
+                DistanceKm = c.DistanceKm,
+                DailyPrice = c.DailyPrice,
+                Status = (int)c.Status
+            })
+            .FirstOrDefaultAsync(ct);
+
+    public async Task<CarResponseDto> CreateAsync(CreateCarDto dto, CancellationToken ct = default)
     {
-        _db = db;
-    }
+        var car = new Car
+        {
+            LicensePlate = dto.LicensePlate,
+            Brand = dto.Brand,
+            Model = dto.Model,
+            DistanceKm = dto.DistanceKm,
+            DailyPrice = dto.DailyPrice,
+            Status = (CarStatus)dto.Status
+        };
 
-    public Task<List<Car>> GetAllAsync(CancellationToken ct = default) =>
-        _db.Cars.AsNoTracking().OrderBy(c => c.Id).ToListAsync(ct);
-
-    public Task<Car?> GetByIdAsync(int id, CancellationToken ct = default) =>
-        _db.Cars.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, ct);
-
-    public async Task<Car> CreateAsync(Car car, CancellationToken ct = default)
-    {
         _db.Cars.Add(car);
         await _db.SaveChangesAsync(ct);
-        return car;
+
+        return new CarResponseDto
+        {
+            Id = car.Id,
+            LicensePlate = car.LicensePlate,
+            Brand = car.Brand,
+            Model = car.Model,
+            DistanceKm = car.DistanceKm,
+            DailyPrice = car.DailyPrice,
+            Status = (int)car.Status
+        };
     }
 
-    public async Task<bool> UpdateAsync(int id, Car updated, CancellationToken ct = default)
+    public async Task<bool> UpdateAsync(int id, UpdateCarDto dto, CancellationToken ct = default)
     {
+        if (dto.Id.HasValue && dto.Id.Value != id)
+            throw new ArgumentException("Route id and body id do not match.");
+
         var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == id, ct);
         if (car is null) return false;
 
-        car.LicensePlate = updated.LicensePlate;
-        car.Brand = updated.Brand;
-        car.Model = updated.Model;
-        car.DistanceKm = updated.DistanceKm;
-        car.DailyPrice = updated.DailyPrice;
-        car.Status = updated.Status;
+        car.LicensePlate = dto.LicensePlate;
+        car.Brand = dto.Brand;
+        car.Model = dto.Model;
+        car.DistanceKm = dto.DistanceKm;
+        car.DailyPrice = dto.DailyPrice;
+        car.Status = (CarStatus)dto.Status;
 
         await _db.SaveChangesAsync(ct);
         return true;
