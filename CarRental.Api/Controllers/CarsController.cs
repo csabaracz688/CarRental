@@ -1,5 +1,6 @@
 ﻿using CarRental.Application.Common.Interfaces;
 using CarRental.Domain.Entities;
+using CarRental.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarRental.WebApi.Controllers;
@@ -26,6 +27,8 @@ public class CarsController : ControllerBase
     }
 
     [HttpPost]
+    //a CarDto-ot itt visszaraktam sima Car car-ra
+    //de maga a CreateCarDto jelen van meg a projektben ha kene kesobb, az Applications/Features mappaba
     public async Task<IActionResult> Create([FromBody] Car car)
     {
         var created = await _cars.CreateAsync(car);
@@ -40,3 +43,4 @@ public class CarsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
         => await _cars.DeleteAsync(id) ? NoContent() : NotFound();
 }
+
