@@ -1,14 +1,45 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import "../styles/Login.css";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login:", email, password);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        {
+          email,
+          password,
+        }
+      );
+
+      //token és role mentés
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("role", response.data.role);
+
+      //átirányítás role alapján
+      if (response.data.role === "ADMIN") {
+        navigate("/admin");
+      } else if (response.data.role === "EMPLOYEE") {
+        navigate("/employee");
+      } else {
+        navigate("/");
+      }
+
+      //ilyen backend választ vár: { "token": "abc123","role": "ADMIN"}
+
+    } catch (error) {
+      console.error(error);
+      alert("Hibás email vagy jelszó!");
+    }
   };
 
   return (
@@ -35,7 +66,7 @@ function Login() {
         <button type="submit">Login</button>
 
         <p className="auth-link">
-          Don't have an account? <Link to="/">Register</Link>
+          Don't have an account? <Link to="/register">Register</Link>
         </p>
       </form>
     </div>
