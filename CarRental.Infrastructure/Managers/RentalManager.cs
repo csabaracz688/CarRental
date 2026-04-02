@@ -22,17 +22,40 @@ public class RentalManager : IRentalManager
             .Include(r => r.ApprovedByUser)
             .OrderByDescending(r => r.Id)
             .ToListAsync(ct);
-    public async Task<Rental> RequestAsync(RequestRentalDto dto, CancellationToken ct = default) 
-    {
-        var carExists = await _db.Cars.AnyAsync(c => c.Id == dto.CarId, ct);
-        if (!carExists) throw new ArgumentException("Invalid CarId");
 
+    public async Task<Rental> RequestAsync(RequestRentalDto dto, CancellationToken ct = default)
+    {
+        // 1) Car lekérés (nem csak AnyAsync), mert kell az Unavailable info
+        var car = await _db.Cars.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == dto.CarId, ct);
+
+        if (car is null)
+            throw new ArgumentException("Invalid CarId");
+
+        // 2) Nem elérhető időszak ellenőrzése (szerviz/törött/admin hold stb.)
+        if (car.UnavailableFrom.HasValue && car.UnavailableTo.HasValue)
+        {
+            var overlaps =
+                dto.StartDate < car.UnavailableTo.Value &&
+                dto.EndDate > car.UnavailableFrom.Value;
+
+            if (overlaps)
+            {
+                var reason = car.UnavailableReason?.ToString() ?? "Unavailable";
+                var note = string.IsNullOrWhiteSpace(car.UnavailableNote) ? "" : $" Note: {car.UnavailableNote}";
+                throw new ArgumentException(
+                    $"Car is unavailable due to {reason} from {car.UnavailableFrom:yyyy-MM-dd} to {car.UnavailableTo:yyyy-MM-dd}.{note}"
+                );
+            }
+        }
+
+        // 3) Guest / user ellenőrzés (ahogy nálad volt)
         var isGuest = dto.UserId is null;
-        if (isGuest) 
+        if (isGuest)
         {
             if (string.IsNullOrWhiteSpace(dto.GuestName) ||
-                 string.IsNullOrWhiteSpace(dto.GuestEmail) ||
-                 string.IsNullOrWhiteSpace(dto.GuestPhone))
+                string.IsNullOrWhiteSpace(dto.GuestEmail) ||
+                string.IsNullOrWhiteSpace(dto.GuestPhone))
                 throw new ArgumentException("GuestName, GuestEmail and GuestPhone are required for guest rentals.");
         }
         else
@@ -41,6 +64,7 @@ public class RentalManager : IRentalManager
             if (!userExists) throw new ArgumentException("Invalid UserId.");
         }
 
+        // 4) Rental létrehozás
         var rental = new Rental
         {
             CarId = dto.CarId,
@@ -94,4 +118,3 @@ public class RentalManager : IRentalManager
         return true;
     }
 }
-

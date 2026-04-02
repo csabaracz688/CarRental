@@ -5,7 +5,6 @@ using System.Text;
 namespace CarRental.Application.Features;
 
 
-//jelenleg nincs hasznalatban, de a mappingolashoz jol johet kesobb(vagy kitoroljuk majd)
 public class CreateCarDto
 {
     public string LicensePlate { get; set; } = null!;
@@ -14,6 +13,10 @@ public class CreateCarDto
     public int DistanceKm { get; set; }
     public int DailyPrice { get; set; }
     public int Status { get; set; }
+    public DateTime? UnavailableFrom { get; set; }
+    public DateTime? UnavailableTo { get; set; }
+    public int? UnavailableReason { get; set; }
+    public string? UnavailableNote { get; set; }
 
 }
 public class UpdateCarDto
@@ -25,6 +28,10 @@ public class UpdateCarDto
     public int DistanceKm { get; set; }
     public int DailyPrice { get; set; }
     public int Status { get; set; }
+    public DateTime? UnavailableFrom { get; set; }
+    public DateTime? UnavailableTo { get; set; }
+    public int? UnavailableReason { get; set; }
+    public string? UnavailableNote { get; set; }
 }
 public class CarResponseDto
 {
@@ -35,4 +42,16 @@ public class CarResponseDto
     public int DistanceKm { get; set; }
     public int DailyPrice { get; set; }
     public int Status { get; set; }
+    public DateTime? UnavailableFrom { get; set; }
+    public DateTime? UnavailableTo { get; set; }
+    public int? UnavailableReason { get; set; }
+    public string? UnavailableNote { get; set; }
+}
+public class CarAvailabilityDto
+{
+    public bool IsAvailable { get; set; }
+    public string? Reason { get; set; }
+    public DateTime? UnavailableFrom { get; set; }
+    public DateTime? UnavailableTo { get; set; }
+    public DateTime? NextAvailableFrom { get; set; }
 }
