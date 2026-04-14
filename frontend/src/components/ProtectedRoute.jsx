@@ -12,5 +12,11 @@ export default function ProtectedRoute({ children, role }) {
 
   if (role && userRole !== role) return <Navigate to="/" />;
 
+  if (!token) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    return <Navigate to="/login" />;
+  }
+
   return children;
 }

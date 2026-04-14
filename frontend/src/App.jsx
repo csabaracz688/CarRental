@@ -27,6 +27,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/cars"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminCars />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/add-car"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminAddCar />
+            </ProtectedRoute>
+          }
+        />
 
         {/* EMPLOYEE */}
         <Route
