@@ -1,8 +1,8 @@
 ﻿using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
-using CarRental.Domain.Entities;
-using CarRental.Domain.Enums;
+using CarRental.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CarRental.WebApi.Controllers;
 
@@ -11,8 +11,13 @@ namespace CarRental.WebApi.Controllers;
 public class CarsController : ControllerBase
 {
     private readonly ICarManager _cars;
+    private readonly CarRentalDbContext _db;
 
-    public CarsController(ICarManager cars) => _cars = cars;
+    public CarsController(ICarManager cars, CarRentalDbContext db)
+    {
+        _cars = cars;
+        _db = db;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await _cars.GetAllAsync());
@@ -38,5 +43,39 @@ public class CarsController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
         => await _cars.DeleteAsync(id) ? NoContent() : NotFound();
-}
 
+    // GET: api/cars/{id}/availability?start=2026-03-11&end=2026-03-14
+    [HttpGet("{id:int}/availability")]
+    public async Task<IActionResult> Availability(int id, [FromQuery] DateTime start, [FromQuery] DateTime end)
+    {
+        var car = await _db.Cars.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (car is null) return NotFound();
+
+        var dto = new CarAvailabilityDto
+        {
+            IsAvailable = true,
+            Reason = null,
+            UnavailableFrom = car.UnavailableFrom,
+            UnavailableTo = car.UnavailableTo,
+            NextAvailableFrom = null
+        };
+
+        if (car.UnavailableFrom.HasValue && car.UnavailableTo.HasValue)
+        {
+            var overlaps =
+                start < car.UnavailableTo.Value &&
+                end > car.UnavailableFrom.Value;
+
+            if (overlaps)
+            {
+                dto.IsAvailable = false;
+                dto.Reason = car.UnavailableReason?.ToString() ?? "Unavailable";
+                dto.NextAvailableFrom = car.UnavailableTo.Value;
+            }
+        }
+
+        return Ok(dto);
+    }
+}

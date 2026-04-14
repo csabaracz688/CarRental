@@ -24,7 +24,12 @@ public class CarManager : ICarManager
                 Model = c.Model,
                 DistanceKm = c.DistanceKm,
                 DailyPrice = c.DailyPrice,
-                Status = (int)c.Status
+                Status = (int)c.Status,
+
+                UnavailableFrom = c.UnavailableFrom,
+                UnavailableTo = c.UnavailableTo,
+                UnavailableReason = c.UnavailableReason == null ? null : (int)c.UnavailableReason,
+                UnavailableNote = c.UnavailableNote
             })
             .ToListAsync(ct);
 
@@ -39,7 +44,12 @@ public class CarManager : ICarManager
                 Model = c.Model,
                 DistanceKm = c.DistanceKm,
                 DailyPrice = c.DailyPrice,
-                Status = (int)c.Status
+                Status = (int)c.Status,
+
+                UnavailableFrom = c.UnavailableFrom,
+                UnavailableTo = c.UnavailableTo,
+                UnavailableReason = c.UnavailableReason == null ? null : (int)c.UnavailableReason,
+                UnavailableNote = c.UnavailableNote
             })
             .FirstOrDefaultAsync(ct);
 
@@ -52,7 +62,14 @@ public class CarManager : ICarManager
             Model = dto.Model,
             DistanceKm = dto.DistanceKm,
             DailyPrice = dto.DailyPrice,
-            Status = (CarStatus)dto.Status
+            Status = (CarStatus)dto.Status,
+
+            UnavailableFrom = dto.UnavailableFrom,
+            UnavailableTo = dto.UnavailableTo,
+            UnavailableReason = dto.UnavailableReason == null
+                ? null
+                : (CarUnavailableReason)dto.UnavailableReason.Value,
+            UnavailableNote = dto.UnavailableNote
         };
 
         _db.Cars.Add(car);
@@ -66,7 +83,12 @@ public class CarManager : ICarManager
             Model = car.Model,
             DistanceKm = car.DistanceKm,
             DailyPrice = car.DailyPrice,
-            Status = (int)car.Status
+            Status = (int)car.Status,
+
+            UnavailableFrom = car.UnavailableFrom,
+            UnavailableTo = car.UnavailableTo,
+            UnavailableReason = car.UnavailableReason == null ? null : (int)car.UnavailableReason,
+            UnavailableNote = car.UnavailableNote
         };
     }
 
@@ -84,6 +106,13 @@ public class CarManager : ICarManager
         car.DistanceKm = dto.DistanceKm;
         car.DailyPrice = dto.DailyPrice;
         car.Status = (CarStatus)dto.Status;
+
+        car.UnavailableFrom = dto.UnavailableFrom;
+        car.UnavailableTo = dto.UnavailableTo;
+        car.UnavailableReason = dto.UnavailableReason == null
+            ? null
+            : (CarUnavailableReason)dto.UnavailableReason.Value;
+        car.UnavailableNote = dto.UnavailableNote;
 
         await _db.SaveChangesAsync(ct);
         return true;
