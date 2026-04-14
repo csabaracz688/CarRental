@@ -1,0 +1,110 @@
+.main-container {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.navbar {
+  background-color: black;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 40px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.search-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.search-input {
+  width: 350px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: none;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.login-btn {
+  text-decoration: none;
+  border: 1px solid white;
+  padding: 6px 15px;
+  border-radius: 20px;
+  color: white;
+}
+
+.login-btn:hover {
+  background-color: white;
+  color: black;
+}
+
+.register-btn {
+  text-decoration: none;
+  background-color: #2563eb;
+  padding: 6px 15px;
+  border-radius: 20px;
+  color: white;
+}
+
+.register-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.hero {
+  text-align: center;
+  margin-top: 120px;
+  padding: 20px;
+}
+
+.hero h2 {
+  font-size: 40px;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  color: #555;
+  max-width: 600px;
+  margin: auto;
+  margin-bottom: 30px;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.hero-login {
+  text-decoration: none;
+  background-color: black;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+}
+
+.hero-login:hover {
+  background-color: #333;
+}
+
+.hero-register {
+  text-decoration: none;
+  background-color: #2563eb;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+}
+
+.hero-register:hover {
+  background-color: #1d4ed8;
+}
