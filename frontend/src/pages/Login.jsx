@@ -21,7 +21,7 @@ function Login() {
       const { token, role } = response.data;
 
       //ilyen backend választ vár: { "token": "abc123","role": "ADMIN"}
-      if (!token || !role) {
+      if (!token || typeof token !== "string" || !role || typeof role !== "string") {
         alert("Hibás bejelentkezési válasz. Kérjük próbálja újra!");
         return;
       }
