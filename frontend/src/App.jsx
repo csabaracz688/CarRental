@@ -3,6 +3,8 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Main from "./pages/Main";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminCars from "./pages/AdminCars";
+import AdminAddCar from "./pages/AdminAddCar";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
