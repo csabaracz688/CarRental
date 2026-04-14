@@ -8,4 +8,4 @@ export const createCar = (formData) =>
   API.post("/admin/cars", formData);
 
 export const updateCarStatus = (id, active) =>
-  API.put(`/admin/cars/${id}/status?active=${active}`);
+  API.put(`/admin/cars/${id}/status?active=${encodeURIComponent(String(active))}`);

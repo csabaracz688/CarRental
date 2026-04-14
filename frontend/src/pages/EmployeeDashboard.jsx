@@ -3,7 +3,7 @@ export default function EmployeeDashboard() {
     <div>
       <h1>Ügyintéző Dashboard</h1>
 
-      <a href="/employee/rentals">Kölcsönzések kezelése</a>
+      <p>Kölcsönzések kezelése hamarosan elérhető.</p>
     </div>
   );
 }
