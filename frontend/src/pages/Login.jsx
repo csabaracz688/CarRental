@@ -18,20 +18,26 @@ function Login() {
         password,
       });
 
+      const { token, role } = response.data;
+
+      //ilyen backend választ vár: { "token": "abc123","role": "ADMIN"}
+      if (!token || !role) {
+        alert("Hibás bejelentkezési válasz. Kérjük próbálja újra!");
+        return;
+      }
+
       //token és role mentés
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.role);
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
 
       //átirányítás role alapján
-      if (response.data.role === "ADMIN") {
+      if (role === "ADMIN") {
         navigate("/admin");
-      } else if (response.data.role === "EMPLOYEE") {
+      } else if (role === "EMPLOYEE") {
         navigate("/employee");
       } else {
         navigate("/");
       }
-
-      //ilyen backend választ vár: { "token": "abc123","role": "ADMIN"}
 
     } catch (error) {
       console.error(error);
