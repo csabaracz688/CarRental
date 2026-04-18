@@ -1,23 +1,24 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import {
+  clearSession,
+  getHomeRouteByRole,
+  getRole,
+  getToken,
+  isTokenExpired,
+} from "../services/authService";
 
 export default function ProtectedRoute({ children, role }) {
-  const isDev = true; // 🔥 kapcsold ki productionben
+  const location = useLocation();
+  const token = getToken();
+  const userRole = getRole();
 
-  if (isDev) {
-    return children;
-  }
-
-  const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("role");
-
-  if (!token || !userRole) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    return <Navigate to="/login" />;
+  if (!token || !userRole || isTokenExpired(token)) {
+    clearSession();
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   if (role && userRole !== role) {
-    return <Navigate to="/" />;
+    return <Navigate to={getHomeRouteByRole(userRole)} replace />;
   }
 
   return children;
