@@ -6,6 +6,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminCars from "./pages/AdminCars";
 import AdminAddCar from "./pages/AdminAddCar";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import EmployeeRentals from "./pages/EmployeeRentals";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -50,6 +52,24 @@ function App() {
           element={
             <ProtectedRoute role="Officer">
               <EmployeeDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/rentals"
+          element={
+            <ProtectedRoute role="Officer">
+              <EmployeeRentals />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* CUSTOMER */}
+        <Route
+          path="/customer"
+          element={
+            <ProtectedRoute role="Customer">
+              <CustomerDashboard />
             </ProtectedRoute>
           }
         />

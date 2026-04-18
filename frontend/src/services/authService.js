@@ -40,6 +40,10 @@ export function getHomeRouteByRole(role) {
     return "/employee";
   }
 
+  if (role === "Customer") {
+    return "/customer";
+  }
+
   return "/";
 }
 
