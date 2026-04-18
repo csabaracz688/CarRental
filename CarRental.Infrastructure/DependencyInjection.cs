@@ -10,6 +10,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
+        services.AddScoped<IAuthManager, AuthManager>();
         services.AddScoped<ICarManager, CarManager>();
         services.AddScoped<IRentalManager, RentalManager>();
 
@@ -20,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<IAppSeedStep, RentalSeedStep>();
         services.AddScoped<IAppSeedStep, InvoiceSeedStep>();
 
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IPasswordHashService, Pbkdf2PasswordHashService>();
 
         return services;
