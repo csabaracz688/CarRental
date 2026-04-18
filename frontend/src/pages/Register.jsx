@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../services/api";
+import { getHomeRouteByRole, saveSession } from "../services/authService";
 import "../styles/Register.css";
 
 function Register() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     userName: "",
     email: "",
@@ -12,6 +15,7 @@ function Register() {
     address: "",
     phone: ""
   });
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -22,23 +26,32 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const response = await fetch("http://localhost:5168/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
-    });
+    try {
+      const response = await api.post("/auth/register", formData);
+      const { token, role, userId, userName } = response.data;
 
-    const data = await response.json();
-    console.log(data);
+      if (!token || !role) {
+        setError("Hibas regisztracios valasz.");
+        return;
+      }
+
+      saveSession({ token, role, userId, userName });
+      navigate(getHomeRouteByRole(role), { replace: true });
+    } catch (err) {
+      const responseMessage = err.response?.data?.message;
+      setError(responseMessage || "Sikertelen regisztracio.");
+    }
   };
+
 
   return (
     <div className="auth-container">
       <form className="auth-form" onSubmit={handleSubmit}>
         <h2>Register</h2>
+
+        {error && <p className="auth-error">{error}</p>}
 
         <input type="text" name="userName" placeholder="Username" onChange={handleChange} required />
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
