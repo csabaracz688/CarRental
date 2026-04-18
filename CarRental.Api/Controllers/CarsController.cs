@@ -1,6 +1,8 @@
 ﻿using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
+using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,9 +22,11 @@ public class CarsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll() => Ok(await _cars.GetAllAsync());
 
     [HttpGet("{id:int}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var car = await _cars.GetByIdAsync(id);
@@ -30,6 +34,7 @@ public class CarsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Create([FromBody] CreateCarDto dto)
     {
         var created = await _cars.CreateAsync(dto);
@@ -37,15 +42,18 @@ public class CarsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateCarDto dto)
         => await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Delete(int id)
         => await _cars.DeleteAsync(id) ? NoContent() : NotFound();
 
     // GET: api/cars/{id}/availability?start=2026-03-11&end=2026-03-14
     [HttpGet("{id:int}/availability")]
+    [AllowAnonymous]
     public async Task<IActionResult> Availability(int id, [FromQuery] DateTime start, [FromQuery] DateTime end)
     {
         var car = await _db.Cars.AsNoTracking()
