@@ -21,30 +21,35 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Get(int id)
     {
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (role != "CUSTOMER" || userId != id)
+        if (userIdClaim == null)
+            return Unauthorized();
+
+        var userId = int.Parse(userIdClaim);
+
+        if(!string.Equals(role, "CUSTOMER", StringComparison.OrdinalIgnoreCase) || userId != id)
             return Forbid();
 
         var user = await _userManager.GetByIdAsync(id);
 
         if (user == null) return NotFound();
 
-        return Ok(user);
+        return Ok(new
+        {
+            user.Id,
+            user.UserName,
+            user.Email,
+            user.Address,
+            user.Phone
+        });
     }
 
     [HttpPut("{id}")]
-    [Authorize]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserProfileDto dto)
     {
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        if (role != "CUSTOMER" || userId != id)
-            return Forbid();
-
         await _userManager.UpdateProfileAsync(id, dto);
-
         return NoContent();
     }
+
 }

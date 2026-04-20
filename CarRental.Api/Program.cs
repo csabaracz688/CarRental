@@ -1,4 +1,6 @@
+using CarRental.Application.Users;
 using CarRental.Infrastructure;
+using CarRental.Infrastructure.Managers;
 using CarRental.Infrastructure.Persistence;
 using CarRental.Infrastructure.Persistence.Seeding;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -13,6 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructure();
+
+builder.Services.AddScoped<IUserManager, UserManager>();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtIssuer = jwtSection["Issuer"] ?? "CarRental.Api";

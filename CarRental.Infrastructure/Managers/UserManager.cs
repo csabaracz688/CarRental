@@ -24,6 +24,8 @@ public class UserManager : IUserManager
             Id = user.Id,
             UserName = user.UserName,
             Email = user.Email,
+            PostalCode = user.PostalCode ?? 0,
+            City = user.City,
             Address = user.Address,
             Phone = user.Phone
         };
@@ -36,6 +38,8 @@ public class UserManager : IUserManager
         if (user == null)
             throw new Exception("User not found");
 
+        user.PostalCode = dto.PostalCode;
+        user.City = dto.City;
         user.Address = dto.Address;
         user.Phone = dto.Phone;
 
