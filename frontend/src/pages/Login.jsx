@@ -43,7 +43,7 @@ function Login() {
       const { token, role, userId, userName } = response.data;
 
       if (!token || typeof token !== "string" || !role || typeof role !== "string") {
-        setError("Hibás bejelentkezés. Kérem, próbálja újra.");
+        setError("Hibás bejelentkeézs. Kérem, próbálja újra.");
         return;
       }
 
@@ -133,7 +133,7 @@ function Login() {
         </div>
 
         <p className="auth-link">
-          Nincs még fiókja? <Link to="/register">Regisztráció</Link>
+          Don't have an account? <Link to="/register">Register</Link>
         </p>
       </form>
     </div>
