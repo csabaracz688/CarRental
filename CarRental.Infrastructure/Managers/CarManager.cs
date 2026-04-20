@@ -127,4 +127,52 @@ public class CarManager : ICarManager
         await _db.SaveChangesAsync(ct);
         return true;
     }
+
+    public async Task<List<CarSearchResultDto>> SearchAsync(
+    CarSearchRequestDto request,
+    CancellationToken cancellationToken)
+    {
+        return await _db.Cars
+            .Select(car => new
+            {
+                car,
+                HasRentalOverlap = car.Rentals.Any(r =>
+                    r.StartDate < request.EndDate && r.EndDate > request.StartDate),
+
+                HasManualBlock =
+                    car.UnavailableFrom != null &&
+                    car.UnavailableTo != null &&
+                    car.UnavailableFrom < request.EndDate &&
+                    car.UnavailableTo > request.StartDate
+            })
+            .Select(x => new CarSearchResultDto
+            {
+                CarId = x.car.Id,
+                LicensePlate = x.car.LicensePlate,
+                Brand = x.car.Brand,
+                Model = x.car.Model,
+                DailyPrice = x.car.DailyPrice,
+
+                IsAvailable = !(x.HasRentalOverlap
+                                || x.HasManualBlock
+                                || x.car.Status != CarStatus.Available),
+
+                NextAvailableFrom =
+                    x.HasRentalOverlap
+                        ? x.car.Rentals
+                            .Where(r => r.StartDate < request.EndDate && r.EndDate > request.StartDate)
+                            .OrderBy(r => r.EndDate)
+                            .Select(r => (DateTime?)r.EndDate)
+                            .FirstOrDefault()
+                    : x.HasManualBlock
+                        ? x.car.UnavailableTo
+                    : null,
+
+                Reason = x.car.Status != CarStatus.Available
+                    ? CarUnavailableReason.Maintenance
+                    : null
+            })
+            .ToListAsync(cancellationToken);
+    }
+
 }

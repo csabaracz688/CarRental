@@ -6,7 +6,7 @@ namespace CarRental.Domain.Enums;
 
 public enum CarUnavailableReason
 {
-    aintenance = 1, 
+    Maintenance = 1, 
     Accident = 2, 
     Repair = 3,      
     Cleaning = 4,    

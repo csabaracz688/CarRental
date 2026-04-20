@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CarRental.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -54,4 +55,25 @@ public class CarAvailabilityDto
     public DateTime? UnavailableFrom { get; set; }
     public DateTime? UnavailableTo { get; set; }
     public DateTime? NextAvailableFrom { get; set; }
+}
+
+public class CarSearchResultDto
+{
+    public int CarId { get; set; }
+    public string LicensePlate { get; set; } = null!;
+    public string Brand { get; set; } = null!;
+    public string Model { get; set; } = null!;
+    public int DailyPrice { get; set; }
+
+    public bool IsAvailable { get; set; }
+
+    public DateTime? NextAvailableFrom { get; set; }
+
+    public CarUnavailableReason? Reason { get; set; }
+}
+
+public class CarSearchRequestDto
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
 }
