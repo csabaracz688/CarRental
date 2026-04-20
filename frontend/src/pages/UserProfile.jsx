@@ -9,7 +9,7 @@ export default function Profile() {
   const userId = localStorage.getItem("userId");
 
   useEffect(() => {
-    fetch(`http://localhost:5168/api/users/${userId}`)
+    fetch(`http://localhost:7077/api/users/${userId}`)
       .then((res) => res.json())
       .then((data) => {
         setUser({
@@ -26,7 +26,7 @@ export default function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await fetch(`http://localhost:5168/api/users/${userId}`, {
+    await fetch(`http://localhost:7077/api/users/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
