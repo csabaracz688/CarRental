@@ -1,4 +1,6 @@
 ﻿using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Features;
+using CarRental.Infrastructure.Managers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarRental.WebApi.Controllers;
@@ -19,7 +21,21 @@ public class RentalsController : ControllerBase
 
     [HttpPost("request")]
     public async Task<IActionResult> Request([FromBody] RequestRentalDto dto)
-        => Ok(await _rentals.RequestAsync(dto));
+    {
+        try
+        {
+            var result = await _rentals.RequestRentalAsync(dto);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                error = ex.Message
+            });
+        }
+    }
+
 
     [HttpPost("{id:int}/approve")]
     public async Task<IActionResult> Approve(int id, [FromQuery] int approvedByUserId)
@@ -32,4 +48,6 @@ public class RentalsController : ControllerBase
     [HttpPost("{id:int}/close")]
     public async Task<IActionResult> Close(int id)
         => await _rentals.CloseAsync(id) ? NoContent() : NotFound();
+
+    
 }
