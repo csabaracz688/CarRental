@@ -41,13 +41,23 @@ public class UsersController : ControllerBase
             user.UserName,
             user.Email,
             user.Address,
+            user.PostalCode,
+            user.City,
             user.Phone
         });
     }
 
     [HttpPut("{id}")]
+    [Authorize]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserProfileDto dto)
     {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        if (userId != id)
+            return Forbid();
         await _userManager.UpdateProfileAsync(id, dto);
         return NoContent();
     }

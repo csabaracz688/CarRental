@@ -80,10 +80,15 @@ public sealed class AuthManager : IAuthManager
             throw new AuthManagerException("Invalid email or password.", 401);
         }
 
+        if (user.Roles is null || !user.Roles.Any())
+        {
+            throw new AuthManagerException("User has no roles assigned.", 401);
+        }
+
         var role = user.Roles
             .Select(r => r.RoleType)
             .OrderByDescending(r => r)
-            .FirstOrDefault();
+            .First();
 
         var token = _jwtTokenService.CreateToken(user, role);
         return new AuthResponseDto(token, role.ToString(), user.Id, user.UserName);

@@ -17,7 +17,8 @@ public class UserManager : IUserManager
     {
         var user = await _context.Users.FindAsync(id);
 
-        if (user == null) return null;
+        if (user == null)
+            throw new Exception("User not found");
 
         return new UserProfileDto
         {

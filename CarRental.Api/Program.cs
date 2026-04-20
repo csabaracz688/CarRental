@@ -21,8 +21,17 @@ builder.Services.AddScoped<IUserManager, UserManager>();
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtIssuer = jwtSection["Issuer"] ?? "CarRental.Api";
 var jwtAudience = jwtSection["Audience"] ?? "CarRental.Frontend";
-var jwtKey = jwtSection["Key"] ?? "ChangeThisDevelopmentOnlyJwtKey123!";
+var jwtKey = jwtSection["Key"];
 
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException("JWT signing key configuration is missing. Configure 'Jwt:Key'.");
+}
+
+if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
+{
+    throw new InvalidOperationException("JWT signing key configuration is too short. Configure 'Jwt:Key' with at least 32 bytes.");
+}
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
