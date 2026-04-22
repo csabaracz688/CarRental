@@ -25,4 +25,8 @@
     <ProjectReference Include="..\CarRental.Infrastructure\CarRental.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="uploads\" />
+  </ItemGroup>
+
 </Project>

@@ -13,6 +13,11 @@ public class CarManager : ICarManager
 
     public CarManager(CarRentalDbContext db) => _db = db;
 
+    private static string? BuildImageUrl(string? imagePath)
+        => imagePath != null
+            ? $"https://localhost:5001/uploads/{imagePath}"
+            : null;
+
     public async Task<List<CarResponseDto>> GetAllAsync(CancellationToken ct = default)
         => await _db.Cars.AsNoTracking()
             .OrderBy(c => c.Id)
@@ -25,6 +30,8 @@ public class CarManager : ICarManager
                 DistanceKm = c.DistanceKm,
                 DailyPrice = c.DailyPrice,
                 Status = (int)c.Status,
+
+                ImageUrl = BuildImageUrl(c.ImagePath),
 
                 UnavailableFrom = c.UnavailableFrom,
                 UnavailableTo = c.UnavailableTo,
@@ -46,6 +53,8 @@ public class CarManager : ICarManager
                 DailyPrice = c.DailyPrice,
                 Status = (int)c.Status,
 
+                ImageUrl = BuildImageUrl(c.ImagePath),
+
                 UnavailableFrom = c.UnavailableFrom,
                 UnavailableTo = c.UnavailableTo,
                 UnavailableReason = c.UnavailableReason == null ? null : (int)c.UnavailableReason,
@@ -55,6 +64,22 @@ public class CarManager : ICarManager
 
     public async Task<CarResponseDto> CreateAsync(CreateCarDto dto, CancellationToken ct = default)
     {
+        string? fileName = null;
+
+        if (dto.Image != null)
+        {
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            fileName = Guid.NewGuid() + Path.GetExtension(dto.Image.FileName);
+            var path = Path.Combine(folder, fileName);
+
+            using var stream = new FileStream(path, FileMode.Create);
+            await dto.Image.CopyToAsync(stream, ct);
+        }
+
         var car = new Car
         {
             LicensePlate = dto.LicensePlate,
@@ -63,6 +88,7 @@ public class CarManager : ICarManager
             DistanceKm = dto.DistanceKm,
             DailyPrice = dto.DailyPrice,
             Status = (CarStatus)dto.Status,
+            ImagePath = fileName,
 
             UnavailableFrom = dto.UnavailableFrom,
             UnavailableTo = dto.UnavailableTo,
@@ -84,6 +110,8 @@ public class CarManager : ICarManager
             DistanceKm = car.DistanceKm,
             DailyPrice = car.DailyPrice,
             Status = (int)car.Status,
+
+            ImageUrl = BuildImageUrl(car.ImagePath),
 
             UnavailableFrom = car.UnavailableFrom,
             UnavailableTo = car.UnavailableTo,
@@ -114,6 +142,22 @@ public class CarManager : ICarManager
             : (CarUnavailableReason)dto.UnavailableReason.Value;
         car.UnavailableNote = dto.UnavailableNote;
 
+        if (dto.Image != null)
+        {
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            var fileName = Guid.NewGuid() + Path.GetExtension(dto.Image.FileName);
+            var path = Path.Combine(folder, fileName);
+
+            using var stream = new FileStream(path, FileMode.Create);
+            await dto.Image.CopyToAsync(stream, ct);
+
+            car.ImagePath = fileName;
+        }
+
         await _db.SaveChangesAsync(ct);
         return true;
     }
@@ -123,8 +167,17 @@ public class CarManager : ICarManager
         var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == id, ct);
         if (car is null) return false;
 
+        // kép törlése
+        if (!string.IsNullOrEmpty(car.ImagePath))
+        {
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", car.ImagePath);
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+
         _db.Cars.Remove(car);
         await _db.SaveChangesAsync(ct);
+
         return true;
     }
 }

@@ -5,6 +5,7 @@ using CarRental.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 
 namespace CarRental.WebApi.Controllers;
 
@@ -35,9 +36,11 @@ public class CarsController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = nameof(RoleTypes.Admin))]
-    public async Task<IActionResult> Create([FromBody] CreateCarDto dto)
+    public async Task<IActionResult> Create([FromForm] CreateCarDto dto)
     {
+
         var created = await _cars.CreateAsync(dto);
+
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 

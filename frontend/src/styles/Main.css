@@ -108,3 +108,40 @@
 .hero-register:hover {
   background-color: #1d4ed8;
 }
+
+.cars-section {
+  padding: 40px;
+  text-align: center;
+}
+
+.cars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.car-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: 0.2s;
+}
+
+.car-card:hover {
+  transform: translateY(-5px);
+}
+
+.car-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.car-status {
+  margin-top: 5px;
+  font-size: 14px;
+  color: gray;
+}

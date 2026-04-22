@@ -51,7 +51,22 @@ function Register() {
       <form className="auth-form" onSubmit={handleSubmit}>
         <h2>Register</h2>
 
-        {error && <p className="auth-error">{error}</p>}
+        {error && (
+          <p
+            className="auth-error"
+            style={{
+              color: "#b00020",
+              backgroundColor: "#fdecea",
+              border: "1px solid #f5c2c7",
+              borderRadius: "4px",
+              padding: "10px 12px",
+              margin: "0 0 16px",
+              textAlign: "left"
+            }}
+          >
+            {error}
+          </p>
+        )}
 
         <input type="text" name="userName" placeholder="Username" onChange={handleChange} required />
         <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
