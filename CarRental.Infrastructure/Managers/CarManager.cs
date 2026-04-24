@@ -168,8 +168,8 @@ public class CarManager : ICarManager
                         ? x.car.UnavailableTo
                     : null,
 
-                Reason = x.car.Status != CarStatus.Available
-                    ? CarUnavailableReason.Maintenance
+                Reason = (x.car.Status != CarStatus.Available || x.HasManualBlock)
+                    ? x.car.UnavailableReason
                     : null
             })
             .ToListAsync(cancellationToken);
