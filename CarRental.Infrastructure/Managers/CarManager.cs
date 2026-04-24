@@ -141,7 +141,6 @@ public class CarManager : ICarManager
 
         return await _db.Cars
             .AsNoTracking()
-            .AsNoTracking()
             .Select(car => new
             {
                 car,
