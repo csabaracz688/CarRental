@@ -153,7 +153,7 @@ public class RentalManager : IRentalManager
                  r.Status == CarRentStatus.Handed) &&
                 r.StartDate < dto.EndDate &&
                 r.EndDate > dto.StartDate)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(ct);
 
 
         if (overlap != null)
