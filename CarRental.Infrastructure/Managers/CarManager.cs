@@ -161,7 +161,7 @@ public class CarManager : ICarManager
                     x.HasRentalOverlap
                         ? x.car.Rentals
                             .Where(r => r.StartDate < request.EndDate && r.EndDate > request.StartDate)
-                            .OrderBy(r => r.EndDate)
+                            .OrderByDescending(r => r.EndDate)
                             .Select(r => (DateTime?)r.EndDate)
                             .FirstOrDefault()
                     : x.HasManualBlock
