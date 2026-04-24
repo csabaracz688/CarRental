@@ -137,8 +137,8 @@ public class RentalManager : IRentalManager
         if (car.UnavailableFrom.HasValue && car.UnavailableTo.HasValue)
         {
             bool blocked =
-                car.UnavailableFrom < dto.EndDate &&
-                car.UnavailableTo > dto.StartDate;
+                car.UnavailableFrom.Value < dto.EndDate &&
+                car.UnavailableTo.Value > dto.StartDate;
 
             if (blocked)
             {
