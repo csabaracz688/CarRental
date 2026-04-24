@@ -1,6 +1,5 @@
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
-using CarRental.Infrastructure.Persistence;
 using CarRental.Infrastructure.Persistence.Seeding.Models;
 using CarRental.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;

@@ -19,6 +19,7 @@ public class Car
     public CarUnavailableReason? UnavailableReason { get; set; }
     [MaxLength(500)]
     public string? UnavailableNote { get; set; }
+    public string? ImagePath { get; set; }
 
     public CarStatus Status { get; set; }
     public ICollection<Rental> Rentals { get; set; } = new List<Rental>();

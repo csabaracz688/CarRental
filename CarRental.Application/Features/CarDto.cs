@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 
 namespace CarRental.Application.Features;
 
@@ -17,6 +18,8 @@ public class CreateCarDto
     public DateTime? UnavailableTo { get; set; }
     public int? UnavailableReason { get; set; }
     public string? UnavailableNote { get; set; }
+    public IFormFile? Image { get; set; }
+    public string? ImagePath { get; set; }
 
 }
 public class UpdateCarDto
@@ -32,6 +35,7 @@ public class UpdateCarDto
     public DateTime? UnavailableTo { get; set; }
     public int? UnavailableReason { get; set; }
     public string? UnavailableNote { get; set; }
+    public IFormFile? Image { get; set; }
 }
 public class CarResponseDto
 {
@@ -46,6 +50,8 @@ public class CarResponseDto
     public DateTime? UnavailableTo { get; set; }
     public int? UnavailableReason { get; set; }
     public string? UnavailableNote { get; set; }
+    public string? ImageUrl { get; set; }
+
 }
 public class CarAvailabilityDto
 {
