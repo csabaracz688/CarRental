@@ -122,7 +122,7 @@ public class RentalManager : IRentalManager
     public async Task<int> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default)
     {
         var car = await _db.Cars
-            .Include(c => c.Rentals)
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == dto.CarId, ct);
 
         if (car == null)
