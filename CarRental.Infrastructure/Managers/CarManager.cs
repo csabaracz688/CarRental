@@ -133,6 +133,7 @@ public class CarManager : ICarManager
     CancellationToken cancellationToken)
     {
         return await _db.Cars
+            .AsNoTracking()
             .Select(car => new
             {
                 car,
