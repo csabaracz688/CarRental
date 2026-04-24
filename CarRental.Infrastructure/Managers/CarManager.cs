@@ -12,6 +12,12 @@ public class CarManager : ICarManager
     private readonly CarRentalDbContext _db;
 
     public CarManager(CarRentalDbContext db) => _db = db;
+    private static readonly CarRentStatus[] BlockingStatuses =
+    {
+        CarRentStatus.Requested,
+        CarRentStatus.Approved,
+        CarRentStatus.Handed
+    };
 
     public async Task<List<CarResponseDto>> GetAllAsync(CancellationToken ct = default)
         => await _db.Cars.AsNoTracking()
@@ -132,13 +138,16 @@ public class CarManager : ICarManager
     CarSearchRequestDto request,
     CancellationToken cancellationToken)
     {
+
         return await _db.Cars
             .AsNoTracking()
             .Select(car => new
             {
                 car,
                 HasRentalOverlap = car.Rentals.Any(r =>
-                    r.StartDate < request.EndDate && r.EndDate > request.StartDate),
+                    BlockingStatuses.Contains(r.Status) &&
+                    r.StartDate < request.EndDate &&
+                    r.EndDate > request.StartDate),
 
                 HasManualBlock =
                     car.UnavailableFrom != null &&
@@ -159,16 +168,13 @@ public class CarManager : ICarManager
                                 || x.car.Status != CarStatus.Available),
 
                 NextAvailableFrom =
-                    x.HasRentalOverlap
-                        ? x.car.Rentals
-                            .Where(r => r.StartDate < request.EndDate && r.EndDate > request.StartDate)
-                            .OrderByDescending(r => r.EndDate)
-                            .Select(r => (DateTime?)r.EndDate)
-                            .FirstOrDefault()
-                    : x.HasManualBlock
-                        ? x.car.UnavailableTo
-                    : null,
-
+    x.HasManualBlock
+        ? x.car.UnavailableTo
+        : x.car.Rentals
+            .Where(r => BlockingStatuses.Contains(r.Status))
+            .Select(r => (DateTime?)r.EndDate)
+            .DefaultIfEmpty()
+            .Max(),
                 Reason = (x.car.Status != CarStatus.Available || x.HasManualBlock)
                     ? x.car.UnavailableReason
                     : null

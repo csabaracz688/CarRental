@@ -79,13 +79,26 @@ public class CarsController : ControllerBase
         return Ok(dto);
     }
     [HttpGet("search")]
-    public async Task<IActionResult> Search( [FromQuery] DateTime start, [FromQuery] DateTime end, CancellationToken cancellationToken)
+    public async Task<IActionResult> Search(
+    [FromQuery] DateTime start,
+    [FromQuery] DateTime end,
+    CancellationToken cancellationToken)
     {
+        if (end <= start)
+        {
+            return BadRequest("End date must be greater than start date.");
+        }
+
         var result = await _cars.SearchAsync(
-            new CarSearchRequestDto { StartDate = start, EndDate = end },
+            new CarSearchRequestDto
+            {
+                StartDate = start,
+                EndDate = end
+            },
             cancellationToken);
 
         return Ok(result);
     }
+
 
 }
