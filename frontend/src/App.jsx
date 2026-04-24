@@ -6,7 +6,10 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminCars from "./pages/AdminCars";
 import AdminAddCar from "./pages/AdminAddCar";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import EmployeeRentals from "./pages/EmployeeRentals";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Profile from "./pages/UserProfile";
 
 function App() {
   return (
@@ -18,11 +21,21 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
+        {/* PROFILE */}
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute role="Customer">
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
         {/* ADMIN */}
         <Route
           path="/admin"
           element={
-            <ProtectedRoute role="ADMIN">
+            <ProtectedRoute role="Admin">
               <AdminDashboard />
             </ProtectedRoute>
           }
@@ -30,7 +43,7 @@ function App() {
         <Route
           path="/admin/cars"
           element={
-            <ProtectedRoute role="ADMIN">
+            <ProtectedRoute role="Admin">
               <AdminCars />
             </ProtectedRoute>
           }
@@ -38,7 +51,7 @@ function App() {
         <Route
           path="/admin/add-car"
           element={
-            <ProtectedRoute role="ADMIN">
+            <ProtectedRoute role="Admin">
               <AdminAddCar />
             </ProtectedRoute>
           }
@@ -48,8 +61,26 @@ function App() {
         <Route
           path="/employee"
           element={
-            <ProtectedRoute role="EMPLOYEE">
+            <ProtectedRoute role="Officer">
               <EmployeeDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/rentals"
+          element={
+            <ProtectedRoute role="Officer">
+              <EmployeeRentals />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* CUSTOMER */}
+        <Route
+          path="/customer"
+          element={
+            <ProtectedRoute role="Customer">
+              <CustomerDashboard />
             </ProtectedRoute>
           }
         />
