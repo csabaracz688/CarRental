@@ -1,6 +1,5 @@
 ﻿using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
-using CarRental.Infrastructure.Managers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarRental.WebApi.Controllers;
