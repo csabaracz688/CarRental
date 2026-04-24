@@ -121,59 +121,7 @@ public class RentalManager : IRentalManager
 
     public async Task<int> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default)
     {
-        var car = await _db.Cars
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == dto.CarId, ct);
-
-        if (car == null)
-            throw new InvalidOperationException("Car not found");
-
-        if (car.Status != CarStatus.Available)
-        {
-            throw new InvalidOperationException(
-                $"Car is not available. Current status: {car.Status}");
-        }
-
-        if (car.UnavailableFrom.HasValue && car.UnavailableTo.HasValue)
-        {
-            bool blocked =
-                car.UnavailableFrom.Value < dto.EndDate &&
-                car.UnavailableTo.Value > dto.StartDate;
-
-            if (blocked)
-            {
-                throw new InvalidOperationException(
-                    $"Car is unavailable due to maintenance between {car.UnavailableFrom} - {car.UnavailableTo}");
-            }
-        }
-        var overlap = await _db.Rentals
-            .Where(r => r.CarId == dto.CarId)
-            .Where(r =>
-                (r.Status == CarRentStatus.Approved ||
-                 r.Status == CarRentStatus.Handed) &&
-                r.StartDate < dto.EndDate &&
-                r.EndDate > dto.StartDate)
-            .FirstOrDefaultAsync(ct);
-
-
-        if (overlap != null)
-        {
-            throw new InvalidOperationException(
-                $"Car already booked between {overlap.StartDate} - {overlap.EndDate}");
-        }
-        var rental = new Rental
-        {
-            CarId = dto.CarId,
-            UserId = dto.UserId,
-            StartDate = dto.StartDate,
-            EndDate = dto.EndDate,
-            Status = CarRentStatus.Requested
-        };
-
-        _db.Rentals.Add(rental);
-        await _db.SaveChangesAsync(ct);
-
-        return rental.Id;
+        return await RequestAsync(dto, ct);
     }
 
 
