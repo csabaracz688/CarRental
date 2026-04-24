@@ -1,3 +1,4 @@
+using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
 using CarRental.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;

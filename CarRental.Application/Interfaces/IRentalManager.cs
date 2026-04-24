@@ -10,16 +10,6 @@ public interface IRentalManager
     Task<bool> ApproveAsync(int rentalId, int approvedByUserId, CancellationToken ct = default);
     Task<bool> RejectAsync(int rentalId, int approvedByUserId, CancellationToken ct = default);
     Task<bool> CloseAsync(int rentalId, CancellationToken ct = default);
-    Task<Rental> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default) => RequestAsync(dto, ct);
+    //Task<Rental> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default) => RequestAsync(dto, ct);
 }
 
-//public class RequestRentalDto
-//{
-//    public int CarId { get; set; }
-//    public int? UserId { get; set; }
-//    public string? GuestName { get; set; }
-//    public string? GuestEmail { get; set; }
-//    public string? GuestPhone { get; set; }
-//    public DateTime StartDate { get; set; }
-//    public DateTime EndDate { get; set; }
-//}
