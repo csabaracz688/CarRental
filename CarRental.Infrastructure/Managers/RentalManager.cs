@@ -119,9 +119,50 @@ public class RentalManager : IRentalManager
         return true;
     }
 
+    public async Task ReturnRentalAsync(int rentalId)
+    {
+        var rental = await _db.Rentals
+            .Include(r => r.Car)
+            .FirstOrDefaultAsync(r => r.Id == rentalId);
+
+        if (rental == null)
+            throw new InvalidOperationException("Rental not found");
+
+        if (rental.Status == CarRentStatus.Returned)
+        {
+            return;
+        }
+
+        if (rental.Status != CarRentStatus.Handed)
+        {
+            throw new InvalidOperationException(
+                $"Rental cannot be returned. Current status: {rental.Status}");
+        }
+
+        rental.Status = CarRentStatus.Returned;
+        rental.ClosedAt = DateTime.UtcNow;
+
+        if (rental.Car != null)
+        {
+            var hasActiveRentals = await _db.Rentals.AnyAsync(r =>
+                r.CarId == rental.CarId &&
+                r.Id != rental.Id &&
+                (r.Status == CarRentStatus.Approved ||
+                 r.Status == CarRentStatus.Handed));
+
+
+            if (!hasActiveRentals)
+            {
+                rental.Car.Status = CarStatus.Available;
+            }
+
+        }
+
+        await _db.SaveChangesAsync();
+    }
+}
     //public async Task<int> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default)
     //{
     //    return await RequestAsync(dto, ct);
     //}
     // Ezt kiszedtem mert hibás, illetve nem tudom mire jo, enélkül is működik a controller, mert a RequestAsync-t hívja meg. Ha kell, vissza lehet tenni, de akkor a visszatérési érték típusa Rental kell legyen, nem int.
-}

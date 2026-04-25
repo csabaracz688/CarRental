@@ -60,4 +60,22 @@ public class RentalsController : ControllerBase
         var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
         return int.TryParse(claimValue, out var parsed) ? parsed : null;
     }
+
+    [HttpPost("{id}/return")]
+    public async Task<IActionResult> Return(int id)
+    {
+        try
+        {
+            await _rentals.ReturnRentalAsync(id);
+            return Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                error = ex.Message
+            });
+        }
+    }
+
 }
