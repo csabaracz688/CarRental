@@ -167,14 +167,18 @@ public class CarManager : ICarManager
                                 || x.HasManualBlock
                                 || x.car.Status != CarStatus.Available),
 
-                NextAvailableFrom =
-    x.HasManualBlock
-        ? x.car.UnavailableTo
-        : x.car.Rentals
-            .Where(r => BlockingStatuses.Contains(r.Status))
-            .Select(r => (DateTime?)r.EndDate)
-            .DefaultIfEmpty()
-            .Max(),
+                NextAvailableFrom = x.HasManualBlock
+                    ? x.car.UnavailableTo
+                    : x.HasRentalOverlap
+                        ? x.car.Rentals
+                            .Where(r =>
+                                BlockingStatuses.Contains(r.Status) &&
+                                r.StartDate < request.EndDate &&
+                                r.EndDate > request.StartDate)
+                            .Select(r => (DateTime?)r.EndDate)
+                            .DefaultIfEmpty()
+                            .Max()
+                        : null,
                 Reason = (x.car.Status != CarStatus.Available || x.HasManualBlock)
                     ? x.car.UnavailableReason
                     : null
