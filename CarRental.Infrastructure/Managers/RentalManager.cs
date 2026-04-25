@@ -1,4 +1,5 @@
 ﻿using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Features;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
@@ -117,4 +118,10 @@ public class RentalManager : IRentalManager
         await _db.SaveChangesAsync(ct);
         return true;
     }
+
+    //public async Task<int> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default)
+    //{
+    //    return await RequestAsync(dto, ct);
+    //}
+    // Ezt kiszedtem mert hibás, illetve nem tudom mire jo, enélkül is működik a controller, mert a RequestAsync-t hívja meg. Ha kell, vissza lehet tenni, de akkor a visszatérési érték típusa Rental kell legyen, nem int.
 }
