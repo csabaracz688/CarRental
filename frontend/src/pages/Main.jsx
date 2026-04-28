@@ -82,7 +82,7 @@ export default function MainPage() {
             <p>No cars available yet.</p>
           ) : (
             cars.map((car) => (
-              <div key={car.id} className="car-card">
+              <div key={car.id} className="car-card" onClick={() => navigate(`/cars/${car.id}`)}>
 
                 <img
                   src={car.imageUrl || "https://via.placeholder.com/300"}
@@ -98,6 +98,7 @@ export default function MainPage() {
                 </p>
 
               </div>
+              
               
             ))
           )}

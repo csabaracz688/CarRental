@@ -9,7 +9,8 @@ import EmployeeDashboard from "./pages/EmployeeDashboard";
 import EmployeeRentals from "./pages/EmployeeRentals";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Profile from "./pages/UserProfile";
+import Profile from "./pages/UserProfile"; 
+import CarDetails from "./pages/CarDetails";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<Main />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/cars/:id" element={<CarDetails />} />
 
         {/* PROFILE */}
         <Route 
@@ -30,6 +32,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
 
         {/* ADMIN */}
         <Route
