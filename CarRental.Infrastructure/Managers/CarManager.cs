@@ -15,7 +15,7 @@ public class CarManager : ICarManager
 
     private static string? BuildImageUrl(string? imagePath)
         => imagePath != null
-            ? $"https://localhost:5001/uploads/{imagePath}"
+            ? $"https://localhost:7077/uploads/{imagePath}"
             : null;
 
     public async Task<List<CarResponseDto>> GetAllAsync(CancellationToken ct = default)
