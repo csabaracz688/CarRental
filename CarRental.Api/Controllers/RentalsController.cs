@@ -1,3 +1,4 @@
+using CarRental.Application.Common.Exceptions;
 using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
 using CarRental.Domain.Enums;
@@ -20,15 +21,15 @@ public class RentalsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll() => Ok(await _rentals.GetAllAsync());
+    public async Task<IActionResult> GetAll(CancellationToken ct =default) => Ok(await _rentals.GetAllAsync(ct));
 
     [HttpPost("request")]
     [AllowAnonymous]
-    public async Task<IActionResult> CreateRequest([FromBody] RequestRentalDto dto)
-        => Ok(await _rentals.RequestAsync(dto));
+    public async Task<IActionResult> CreateRequest([FromBody] RequestRentalDto dto, CancellationToken ct)
+        => Ok(await _rentals.RequestAsync(dto, ct));
 
     [HttpPost("{id:int}/approve")]
-    public async Task<IActionResult> Approve(int id, [FromQuery] int? approvedByUserId)
+    public async Task<IActionResult> Approve(int id, [FromQuery] int? approvedByUserId, CancellationToken ct)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
         if (actingUserId is null)
@@ -36,11 +37,11 @@ public class RentalsController : ControllerBase
             return BadRequest("Approver user id is required.");
         }
 
-        return await _rentals.ApproveAsync(id, actingUserId.Value) ? NoContent() : NotFound();
+        return await _rentals.ApproveAsync(id, actingUserId.Value, ct) ? NoContent() : NotFound();
     }
 
     [HttpPost("{id:int}/reject")]
-    public async Task<IActionResult> Reject(int id, [FromQuery] int? approvedByUserId)
+    public async Task<IActionResult> Reject(int id, [FromQuery] int? approvedByUserId, CancellationToken ct)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
         if (actingUserId is null)
@@ -48,12 +49,12 @@ public class RentalsController : ControllerBase
             return BadRequest("Approver user id is required.");
         }
 
-        return await _rentals.RejectAsync(id, actingUserId.Value) ? NoContent() : NotFound();
+        return await _rentals.RejectAsync(id, actingUserId.Value, ct) ? NoContent() : NotFound();
     }
 
     [HttpPost("{id:int}/close")]
-    public async Task<IActionResult> Close(int id)
-        => await _rentals.CloseAsync(id) ? NoContent() : NotFound();
+    public async Task<IActionResult> Close(int id, CancellationToken ct)
+        => await _rentals.CloseAsync(id, ct) ? NoContent() : NotFound();
 
     private static int? TryGetCurrentUserId(ClaimsPrincipal user)
     {
@@ -61,20 +62,21 @@ public class RentalsController : ControllerBase
         return int.TryParse(claimValue, out var parsed) ? parsed : null;
     }
 
-    [HttpPost("{id}/return")]
-    public async Task<IActionResult> Return(int id)
+    [HttpPost("{id:int}/return")]
+    public async Task<IActionResult> Return(int id, CancellationToken ct)
     {
         try
         {
-            await _rentals.ReturnRentalAsync(id);
+            await _rentals.ReturnRentalAsync(id, ct);
             return Ok();
         }
-        catch (InvalidOperationException ex)
+        catch (NotFoundException ex)
         {
-            return BadRequest(new
-            {
-                error = ex.Message
-            });
+            return NotFound(new { error = ex.Message });
+        }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { error = ex.Message });
         }
     }
 

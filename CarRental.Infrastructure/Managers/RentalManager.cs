@@ -1,4 +1,5 @@
-﻿using CarRental.Application.Common.Interfaces;
+﻿using CarRental.Application.Common.Exceptions;
+using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
@@ -119,14 +120,14 @@ public class RentalManager : IRentalManager
         return true;
     }
 
-    public async Task ReturnRentalAsync(int rentalId)
+    public async Task ReturnRentalAsync(int rentalId, CancellationToken ct = default)
     {
         var rental = await _db.Rentals
             .Include(r => r.Car)
-            .FirstOrDefaultAsync(r => r.Id == rentalId);
+            .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
 
         if (rental == null)
-            throw new InvalidOperationException("Rental not found");
+            throw new NotFoundException("Rental not found");
 
         if (rental.Status == CarRentStatus.Returned)
         {
@@ -135,9 +136,10 @@ public class RentalManager : IRentalManager
 
         if (rental.Status != CarRentStatus.Handed)
         {
-            throw new InvalidOperationException(
+            throw new ConflictException(
                 $"Rental cannot be returned. Current status: {rental.Status}");
         }
+
 
         rental.Status = CarRentStatus.Returned;
         rental.ClosedAt = DateTime.UtcNow;
@@ -148,7 +150,7 @@ public class RentalManager : IRentalManager
                 r.CarId == rental.CarId &&
                 r.Id != rental.Id &&
                 (r.Status == CarRentStatus.Approved ||
-                 r.Status == CarRentStatus.Handed));
+                 r.Status == CarRentStatus.Handed),ct);
 
 
             if (!hasActiveRentals)
@@ -158,7 +160,7 @@ public class RentalManager : IRentalManager
 
         }
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
     }
 }
     //public async Task<int> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default)
