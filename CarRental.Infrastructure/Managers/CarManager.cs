@@ -12,6 +12,12 @@ public class CarManager : ICarManager
     private readonly CarRentalDbContext _db;
 
     public CarManager(CarRentalDbContext db) => _db = db;
+    private static readonly CarRentStatus[] BlockingStatuses =
+    {
+        CarRentStatus.Requested,
+        CarRentStatus.Approved,
+        CarRentStatus.Handed
+    };
 
     private static string? BuildImageUrl(string? imagePath)
         => imagePath != null
@@ -180,4 +186,57 @@ public class CarManager : ICarManager
 
         return true;
     }
+
+    public async Task<List<CarSearchResultDto>> SearchAsync(
+    CarSearchRequestDto request,
+    CancellationToken cancellationToken)
+    {
+
+        return await _db.Cars
+            .AsNoTracking()
+            .Select(car => new
+            {
+                car,
+                HasRentalOverlap = car.Rentals.Any(r =>
+                    BlockingStatuses.Contains(r.Status) &&
+                    r.StartDate < request.EndDate &&
+                    r.EndDate > request.StartDate),
+
+                HasManualBlock =
+                    car.UnavailableFrom != null &&
+                    car.UnavailableTo != null &&
+                    car.UnavailableFrom < request.EndDate &&
+                    car.UnavailableTo > request.StartDate
+            })
+            .Select(x => new CarSearchResultDto
+            {
+                CarId = x.car.Id,
+                LicensePlate = x.car.LicensePlate,
+                Brand = x.car.Brand,
+                Model = x.car.Model,
+                DailyPrice = x.car.DailyPrice,
+
+                IsAvailable = !(x.HasRentalOverlap
+                                || x.HasManualBlock
+                                || x.car.Status != CarStatus.Available),
+
+                NextAvailableFrom = x.HasManualBlock
+                    ? x.car.UnavailableTo
+                    : x.HasRentalOverlap
+                        ? x.car.Rentals
+                            .Where(r =>
+                                BlockingStatuses.Contains(r.Status) &&
+                                r.StartDate < request.EndDate &&
+                                r.EndDate > request.StartDate)
+                            .Select(r => (DateTime?)r.EndDate)
+                            .DefaultIfEmpty()
+                            .Max()
+                        : null,
+                Reason = (x.car.Status != CarStatus.Available || x.HasManualBlock)
+                    ? x.car.UnavailableReason
+                    : null
+            })
+            .ToListAsync(cancellationToken);
+    }
+
 }
