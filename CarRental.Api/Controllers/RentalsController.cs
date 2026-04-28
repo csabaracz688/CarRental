@@ -8,7 +8,7 @@ namespace CarRental.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+[Authorize]
 public class RentalsController : ControllerBase
 {
     private readonly IRentalManager _rentals;
@@ -24,9 +24,30 @@ public class RentalsController : ControllerBase
     [HttpPost("request")]
     [AllowAnonymous]
     public async Task<IActionResult> CreateRequest([FromBody] RequestRentalDto dto)
-        => Ok(await _rentals.RequestAsync(dto));
+    {
+        try
+        {
+            var currentUserId = TryGetCurrentUserId(User);
+
+            if (currentUserId.HasValue)
+            {
+                dto.UserId = currentUserId.Value;
+                dto.GuestName = null;
+                dto.GuestEmail = null;
+                dto.GuestPhone = null;
+            }
+
+            var rental = await _rentals.RequestAsync(dto);
+            return Ok(rental);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 
     [HttpPost("{id:int}/approve")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
     public async Task<IActionResult> Approve(int id, [FromQuery] int? approvedByUserId)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
@@ -39,6 +60,7 @@ public class RentalsController : ControllerBase
     }
 
     [HttpPost("{id:int}/reject")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
     public async Task<IActionResult> Reject(int id, [FromQuery] int? approvedByUserId)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
@@ -51,6 +73,7 @@ public class RentalsController : ControllerBase
     }
 
     [HttpPost("{id:int}/close")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
     public async Task<IActionResult> Close(int id)
         => await _rentals.CloseAsync(id) ? NoContent() : NotFound();
 
@@ -58,5 +81,19 @@ public class RentalsController : ControllerBase
     {
         var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
         return int.TryParse(claimValue, out var parsed) ? parsed : null;
+    }
+
+    [HttpGet("user-rentals")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Customer)},{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> GetUserRentals()
+    {
+        var userId = TryGetCurrentUserId(User);
+
+        if (userId is null)
+            return Unauthorized(new { message = "User is not authenticated." });
+
+        var rentals = await _rentals.GetByUserIdAsync(userId.Value);
+
+        return Ok(rentals);
     }
 }

@@ -36,6 +36,9 @@ export default function MainPage() {
         </div>
 
         <div className="nav-buttons">
+          <Link to="/user-rentals" className="my-rentals-btn">
+               My rentals
+          </Link>
 
           {!token ? (
             <>

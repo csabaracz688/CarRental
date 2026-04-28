@@ -57,36 +57,75 @@ public class CarsController : ControllerBase
     // GET: api/cars/{id}/availability?start=2026-03-11&end=2026-03-14
     [HttpGet("{id:int}/availability")]
     [AllowAnonymous]
-    public async Task<IActionResult> Availability(int id, [FromQuery] DateTime start, [FromQuery] DateTime end)
+    public async Task<IActionResult> Availability(
+      int id,
+      [FromQuery] DateTime start,
+      [FromQuery] DateTime end)
     {
-        var car = await _db.Cars.AsNoTracking()
+        var car = await _db.Cars
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
 
-        if (car is null) return NotFound();
+        if (car is null)
+            return NotFound();
+
+        if (start >= end)
+            return BadRequest("Start date must be before end date.");
+
+        var unavailableOverlap =
+            car.UnavailableFrom.HasValue &&
+            car.UnavailableTo.HasValue &&
+            start < car.UnavailableTo.Value &&
+            end > car.UnavailableFrom.Value;
+
+        var rentalOverlap = await _db.Rentals.AnyAsync(r =>
+            r.CarId == id &&
+            r.Status != CarRentStatus.Rejected &&
+            r.Status != CarRentStatus.Returned &&
+            start < r.EndDate &&
+            end > r.StartDate
+        );
 
         var dto = new CarAvailabilityDto
         {
-            IsAvailable = true,
-            Reason = null,
+            IsAvailable = !unavailableOverlap && !rentalOverlap,
+            Reason = unavailableOverlap
+                ? car.UnavailableReason?.ToString() ?? "Unavailable"
+                : rentalOverlap
+                    ? "Already rented for this period"
+                    : null,
             UnavailableFrom = car.UnavailableFrom,
             UnavailableTo = car.UnavailableTo,
-            NextAvailableFrom = null
+            NextAvailableFrom = car.UnavailableTo
         };
 
-        if (car.UnavailableFrom.HasValue && car.UnavailableTo.HasValue)
-        {
-            var overlaps =
-                start < car.UnavailableTo.Value &&
-                end > car.UnavailableFrom.Value;
-
-            if (overlaps)
-            {
-                dto.IsAvailable = false;
-                dto.Reason = car.UnavailableReason?.ToString() ?? "Unavailable";
-                dto.NextAvailableFrom = car.UnavailableTo.Value;
-            }
-        }
-
         return Ok(dto);
+    }
+
+    [HttpGet("{id:int}/rentals")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCarRentals(int id)
+    {
+        var carExists = await _db.Cars.AnyAsync(c => c.Id == id);
+
+        if (!carExists)
+            return NotFound();
+
+        var rentals = await _db.Rentals
+            .AsNoTracking()
+            .Where(r =>
+                r.CarId == id &&
+                r.Status != CarRentStatus.Rejected &&
+                r.Status != CarRentStatus.Returned
+            )
+            .Select(r => new
+            {
+                startDate = r.StartDate,
+                endDate = r.EndDate,
+                status = (int)r.Status
+            })
+            .ToListAsync();
+
+        return Ok(rentals);
     }
 }
