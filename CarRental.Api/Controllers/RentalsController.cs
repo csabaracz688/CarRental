@@ -133,11 +133,11 @@ public class RentalsController : ControllerBase
         }
         catch (NotFoundException ex)
         {
-            return NotFound(new { error = ex.Message });
+            return NotFound(new { message = ex.Message });
         }
         catch (ConflictException ex)
         {
-            return Conflict(new { error = ex.Message });
+            return Conflict(new { message = ex.Message });
         }
     }
 
