@@ -50,3 +50,8 @@ public class RentalListDto
     public DateTime? HandedOverAt { get; set; }
     public DateTime? ClosedAt { get; set; }
 }
+
+public class HandOverRentalDto
+{
+    public DateTime HandedOverAt { get; set; }
+}

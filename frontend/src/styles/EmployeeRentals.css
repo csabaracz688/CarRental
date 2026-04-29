@@ -70,3 +70,39 @@
 .reject-btn:hover {
   background: #c82333;
 }
+
+.close-btn {
+  background: #343a40;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+.close-btn:hover {
+  background: #212529;
+}
+
+.handover-box {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.handover-box input {
+  padding: 9px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.handover-btn {
+  background: #0d6efd;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}

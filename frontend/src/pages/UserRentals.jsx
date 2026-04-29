@@ -57,43 +57,38 @@ export default function UserRentals() {
       ) : (
         <div className="rentals-list">
           {rentals.map((rental) => (
-            <div key={rental.id} className="rental-card">
-              <img
-                className="rental-car-image"
-                src={
-                  rental.car?.imageUrl ||
-                  (rental.car?.imagePath
-                    ? `https://localhost:7077/uploads/${rental.car.imagePath}`
-                    : "https://via.placeholder.com/300x180")
-                }
-                alt={`${rental.car?.brand} ${rental.car?.model}`}
-              />
+  <div key={rental.id} className="rental-card">
+    <img
+      className="rental-car-image"
+      src={rental.imageUrl || "https://via.placeholder.com/300x180"}
+      alt={`${rental.carBrand} ${rental.carModel}`}
+    />
 
-              <div className="rental-info">
-                <h2>
-                  {rental.car?.brand} {rental.car?.model}
-                </h2>
+    <div className="rental-info">
+      <h2>
+        {rental.carBrand} {rental.carModel}
+      </h2>
 
-                <p>
-                  <strong>From:</strong>{" "}
-                  {new Date(rental.startDate).toLocaleDateString()}
-                </p>
+      <p>
+        <strong>From:</strong>{" "}
+        {new Date(rental.startDate).toLocaleDateString()}
+      </p>
 
-                <p>
-                  <strong>To:</strong>{" "}
-                  {new Date(rental.endDate).toLocaleDateString()}
-                </p>
+      <p>
+        <strong>To:</strong>{" "}
+        {new Date(rental.endDate).toLocaleDateString()}
+      </p>
 
-                <p>
-                  <strong>Status:</strong> {rental.status}
-                </p>
+      <p>
+        <strong>Status:</strong> {rental.statusText || rental.status}
+      </p>
 
-                <p>
-                  <strong>Price/day:</strong> {rental.car?.dailyPrice} Ft
-                </p>
-              </div>
-            </div>
-          ))}
+      <p>
+        <strong>Price/day:</strong> {rental.dailyPrice} Ft
+      </p>
+    </div>
+  </div>
+    ))}
         </div>
       )}
     </div>

@@ -218,4 +218,18 @@ public class RentalManager : IRentalManager
         await _db.SaveChangesAsync(ct);
         return true;
     }
+
+    public async Task<bool> HandOverAsync(int rentalId, DateTime handedOverAt, CancellationToken ct = default)
+    {
+        var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+        if (rental is null) return false;
+
+        if (rental.Status != CarRentStatus.Approved)
+            throw new ArgumentException("Only approved rentals can be handed over.");
+
+        rental.HandedOverAt = handedOverAt;
+
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
 }

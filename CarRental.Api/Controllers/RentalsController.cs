@@ -116,4 +116,20 @@ public class RentalsController : ControllerBase
 
         return Ok(rentals);
     }
+
+    [HttpPost("{id:int}/handover")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> HandOver(int id, [FromBody] HandOverRentalDto dto)
+    {
+        try
+        {
+            return await _rentals.HandOverAsync(id, dto.HandedOverAt)
+                ? NoContent()
+                : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
