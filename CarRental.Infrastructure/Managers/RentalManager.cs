@@ -219,15 +219,22 @@ public class RentalManager : IRentalManager
 
     public async Task<bool> CloseAsync(int rentalId, CancellationToken ct = default)
     {
-        var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
-        if (rental is null) return false;
-
-        rental.Status = CarRentStatus.Returned;
-        rental.ClosedAt = DateTime.UtcNow;
-
-        await _db.SaveChangesAsync(ct);
-        return true;
+        try
+        {
+            await ReturnRentalAsync(rentalId, ct);
+            return true;
+        }
+        catch (NotFoundException)
+        {
+            return false;
+        }
+        catch (ConflictException)
+        {
+            return false;
+        }
     }
+
+
 
     public async Task ReturnRentalAsync(int rentalId, CancellationToken ct = default)
     {
@@ -248,6 +255,7 @@ public class RentalManager : IRentalManager
             throw new ConflictException(
                 $"Rental cannot be returned. Current status: {rental.Status}");
         }
+
 
         rental.Status = CarRentStatus.Returned;
         rental.ClosedAt = DateTime.UtcNow;
