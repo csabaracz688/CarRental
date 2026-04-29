@@ -1,6 +1,7 @@
 using CarRental.Application.Common.Exceptions;
 using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
+using CarRental.Domain.Constants;
 using CarRental.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,10 +22,12 @@ public class RentalsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> GetAll()
         => Ok(await _rentals.GetAllAsync());
 
     [HttpGet("pending")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> GetPending(CancellationToken ct)
         => Ok(await _rentals.GetPendingAsync(ct));
 
@@ -54,7 +57,7 @@ public class RentalsController : ControllerBase
     }
 
     [HttpPost("{id:int}/approve")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> Approve(int id, [FromQuery] int? approvedByUserId)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
@@ -79,7 +82,7 @@ public class RentalsController : ControllerBase
     }
 
     [HttpPost("{id:int}/reject")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> Reject(int id, [FromQuery] int? approvedByUserId)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
@@ -104,7 +107,7 @@ public class RentalsController : ControllerBase
     }
 
     [HttpPost("{id:int}/handover")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> Handover(int id)
     {
         try
@@ -118,7 +121,7 @@ public class RentalsController : ControllerBase
     }
 
     [HttpPost("{id:int}/close")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> Close(int id)
         => await _rentals.CloseAsync(id) ? NoContent() : NotFound();
 
@@ -142,7 +145,7 @@ public class RentalsController : ControllerBase
     }
 
     [HttpGet("user-rentals")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Customer)},{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    [Authorize(Roles = $"{RoleConstants.Customer},{RoleConstants.Admin}")]
     public async Task<IActionResult> GetUserRentals()
     {
         var userId = TryGetCurrentUserId(User);

@@ -1,5 +1,6 @@
 using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
+using CarRental.Domain.Constants;
 using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -35,7 +36,7 @@ public class CarsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = nameof(RoleTypes.Admin))]
+    [Authorize(Roles = RoleConstants.Admin)]
     public async Task<IActionResult> Create([FromForm] CreateCarDto dto)
     {
         try
@@ -50,7 +51,7 @@ public class CarsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = nameof(RoleTypes.Admin))]
+    [Authorize(Roles = RoleConstants.Admin)]
     public async Task<IActionResult> Update(int id, [FromForm] UpdateCarDto dto)
     {
         try
@@ -64,7 +65,7 @@ public class CarsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = nameof(RoleTypes.Admin))]
+    [Authorize(Roles = RoleConstants.Admin)]
     public async Task<IActionResult> Delete(int id)
         => await _cars.DeleteAsync(id) ? NoContent() : NotFound();
 
@@ -143,6 +144,7 @@ public class CarsController : ControllerBase
         return Ok(rentals);
     }
     [HttpGet("search")]
+    [AllowAnonymous]
     public async Task<IActionResult> Search(
     [FromQuery] DateTime start,
     [FromQuery] DateTime end,
@@ -163,6 +165,4 @@ public class CarsController : ControllerBase
 
         return Ok(result);
     }
-
-
 }
