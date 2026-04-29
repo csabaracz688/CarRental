@@ -19,10 +19,14 @@ public class CarManager : ICarManager
         CarRentStatus.Handed
     };
 
-    private static string? BuildImageUrl(string? imagePath)
+    /*private static string? BuildImageUrl(string? imagePath)
         => imagePath != null
             ? $"https://localhost:7077/uploads/{imagePath}"
-            : null;
+            : null;*/
+    private static string? BuildImageUrl(string? imagePath)
+    => imagePath != null
+        ? $"/uploads/{imagePath}"
+        : null;
 
     public async Task<List<CarResponseDto>> GetAllAsync(CancellationToken ct = default)
         => await _db.Cars.AsNoTracking()
@@ -74,7 +78,7 @@ public class CarManager : ICarManager
 
         if (dto.Image != null)
         {
-            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
@@ -150,7 +154,7 @@ public class CarManager : ICarManager
 
         if (dto.Image != null)
         {
-            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
@@ -176,7 +180,7 @@ public class CarManager : ICarManager
         // kép törlése
         if (!string.IsNullOrEmpty(car.ImagePath))
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", car.ImagePath);
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", car.ImagePath);
             if (File.Exists(path))
                 File.Delete(path);
         }

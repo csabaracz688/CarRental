@@ -38,16 +38,30 @@ public class CarsController : ControllerBase
     [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Create([FromForm] CreateCarDto dto)
     {
-
-        var created = await _cars.CreateAsync(dto);
-
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        try
+        {
+            var created = await _cars.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message, details = ex.InnerException?.Message });
+        }
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = nameof(RoleTypes.Admin))]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateCarDto dto)
-        => await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+    public async Task<IActionResult> Update(int id, [FromForm] UpdateCarDto dto)
+    {
+        try
+        {
+            return await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message, details = ex.InnerException?.Message });
+        }
+    }
 
     [HttpDelete("{id:int}")]
     [Authorize(Roles = nameof(RoleTypes.Admin))]
