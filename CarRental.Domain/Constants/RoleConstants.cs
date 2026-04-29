@@ -5,7 +5,7 @@ namespace CarRental.Domain.Constants;
 /// </summary>
 public static class RoleConstants
 {
-    public const string Customer = "Customer";
-    public const string Officer = "Officer";
-    public const string Admin = "Admin";
+    public const string Customer = nameof(RoleTypes.Customer);
+    public const string Officer = nameof(RoleTypes.Officer);
+    public const string Admin = nameof(RoleTypes.Admin);
 }
