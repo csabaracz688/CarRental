@@ -20,7 +20,12 @@ public class RentalsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll() => Ok(await _rentals.GetAllAsync());
+    public async Task<IActionResult> GetAll()
+        => Ok(await _rentals.GetAllAsync());
+
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPending(CancellationToken ct)
+        => Ok(await _rentals.GetPendingAsync(ct));
 
     [HttpPost("request")]
     [AllowAnonymous]
