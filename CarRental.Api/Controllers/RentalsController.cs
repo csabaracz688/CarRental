@@ -1,4 +1,5 @@
-﻿using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Features;
 using CarRental.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,12 @@ public class RentalsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll() => Ok(await _rentals.GetAllAsync());
+    public async Task<IActionResult> GetAll()
+        => Ok(await _rentals.GetAllAsync());
+
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPending(CancellationToken ct)
+        => Ok(await _rentals.GetPendingAsync(ct));
 
     [HttpPost("request")]
     [AllowAnonymous]
@@ -56,7 +62,14 @@ public class RentalsController : ControllerBase
             return BadRequest("Approver user id is required.");
         }
 
-        return await _rentals.ApproveAsync(id, actingUserId.Value) ? NoContent() : NotFound();
+        try
+        {
+            return await _rentals.ApproveAsync(id, actingUserId.Value) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost("{id:int}/reject")]
@@ -69,7 +82,14 @@ public class RentalsController : ControllerBase
             return BadRequest("Approver user id is required.");
         }
 
-        return await _rentals.RejectAsync(id, actingUserId.Value) ? NoContent() : NotFound();
+        try
+        {
+            return await _rentals.RejectAsync(id, actingUserId.Value) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost("{id:int}/close")]

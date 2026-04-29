@@ -1,4 +1,5 @@
 ﻿using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Features;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
@@ -15,14 +16,76 @@ public class RentalManager : IRentalManager
         _db = db;
     }
 
-    public Task<List<Rental>> GetAllAsync(CancellationToken ct = default) =>
-        _db.Rentals.AsNoTracking()
-            .Include(r => r.Car)
-            .Include(r => r.User)
-            .Include(r => r.ApprovedByUser)
+    public async Task<List<RentalListDto>> GetAllAsync(CancellationToken ct = default)
+    {
+        return await _db.Rentals
+            .AsNoTracking()
             .OrderByDescending(r => r.Id)
-            .ToListAsync(ct);
+            .Select(r => new RentalListDto
+            {
+                Id = r.Id,
 
+                CarId = r.CarId,
+                LicensePlate = r.Car.LicensePlate,
+                CarBrand = r.Car.Brand,
+                CarModel = r.Car.Model,
+
+                UserId = r.UserId,
+                UserName = r.User != null ? r.User.UserName : null,
+
+                GuestName = r.GuestName,
+                GuestEmail = r.GuestEmail,
+                GuestPhone = r.GuestPhone,
+
+                StartDate = r.StartDate,
+                EndDate = r.EndDate,
+
+                Status = r.Status,
+
+                ApprovedByUserId = r.ApprovedByUserId,
+                ApprovedByUserName = r.ApprovedByUser != null ? r.ApprovedByUser.UserName : null,
+
+                HandedOverAt = r.HandedOverAt,
+                ClosedAt = r.ClosedAt
+            })
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<RentalListDto>> GetPendingAsync(CancellationToken ct = default)
+    {
+        return await _db.Rentals
+            .AsNoTracking()
+            .Where(r => r.Status == CarRentStatus.Requested)
+            .OrderByDescending(r => r.Id)
+            .Select(r => new RentalListDto
+            {
+                Id = r.Id,
+
+                CarId = r.CarId,
+                LicensePlate = r.Car.LicensePlate,
+                CarBrand = r.Car.Brand,
+                CarModel = r.Car.Model,
+
+                UserId = r.UserId,
+                UserName = r.User != null ? r.User.UserName : null,
+
+                GuestName = r.GuestName,
+                GuestEmail = r.GuestEmail,
+                GuestPhone = r.GuestPhone,
+
+                StartDate = r.StartDate,
+                EndDate = r.EndDate,
+
+                Status = r.Status,
+
+                ApprovedByUserId = r.ApprovedByUserId,
+                ApprovedByUserName = r.ApprovedByUser != null ? r.ApprovedByUser.UserName : null,
+
+                HandedOverAt = r.HandedOverAt,
+                ClosedAt = r.ClosedAt
+            })
+            .ToListAsync(ct);
+    }
     public async Task<Rental> RequestAsync(RequestRentalDto dto, CancellationToken ct = default)
     {
         // 1) Car lekérés (nem csak AnyAsync), mert kell az Unavailable info
@@ -104,6 +167,13 @@ public class RentalManager : IRentalManager
         var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
         if (rental is null) return false;
 
+        if (rental.Status != CarRentStatus.Requested)
+            throw new ArgumentException("Only requested rentals can be approved.");
+
+        var approverExists = await _db.Users.AnyAsync(u => u.Id == approvedByUserId, ct);
+        if (!approverExists)
+            throw new ArgumentException("Invalid approvedByUserId.");
+
         rental.Status = CarRentStatus.Approved;
         rental.ApprovedByUserId = approvedByUserId;
 
@@ -115,6 +185,13 @@ public class RentalManager : IRentalManager
     {
         var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
         if (rental is null) return false;
+
+        if (rental.Status != CarRentStatus.Requested)
+            throw new ArgumentException("Only requested rentals can be rejected.");
+
+        var approverExists = await _db.Users.AnyAsync(u => u.Id == approvedByUserId, ct);
+        if (!approverExists)
+            throw new ArgumentException("Invalid approvedByUserId.");
 
         rental.Status = CarRentStatus.Rejected;
         rental.ApprovedByUserId = approvedByUserId;
