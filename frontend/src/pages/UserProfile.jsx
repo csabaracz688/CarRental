@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const [user, setUser] = useState({
@@ -11,6 +12,7 @@ export default function Profile() {
   const token = localStorage.getItem("token");
 const payload = JSON.parse(atob(token.split('.')[1]));
 console.log(payload);
+const navigate = useNavigate();
 
   // 👉 userId a tokenből
   const getUserIdFromToken = () => {
@@ -96,7 +98,12 @@ console.log(payload);
   };
 
   return (
+    
     <div>
+      <button onClick={() => navigate("/")} className="back-btn">
+        ← Back
+      </button>
+
       <h1>Profile</h1>
 
       <form onSubmit={handleSubmit}>

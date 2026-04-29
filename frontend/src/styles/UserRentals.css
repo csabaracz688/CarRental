@@ -1,0 +1,77 @@
+.user-rentals-page {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.user-rentals-page h1 {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.empty-text {
+  text-align: center;
+  color: #666;
+}
+
+.rentals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rental-card {
+  display: flex;
+  gap: 20px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  align-items: center;
+}
+
+.rental-car-image {
+  width: 230px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #eee;
+}
+
+.rental-info {
+  flex: 1;
+}
+
+.rental-info h2 {
+  margin-bottom: 12px;
+}
+
+.rental-info p {
+  margin: 6px 0;
+  color: #444;
+}
+
+@media (max-width: 700px) {
+  .rental-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rental-car-image {
+    width: 100%;
+    height: 200px;
+  }
+
+  .back-btn {
+  margin-bottom: 20px;
+  background: transparent;
+  border: none;
+  color: #007bff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  text-decoration: underline;
+}
+}

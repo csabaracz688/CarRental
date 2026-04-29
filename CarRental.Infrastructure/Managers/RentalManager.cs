@@ -94,6 +94,8 @@ public class RentalManager : IRentalManager
 
         if (car is null)
             throw new ArgumentException("Invalid CarId");
+        if (dto.StartDate >= dto.EndDate)
+            throw new ArgumentException("StartDate must be before EndDate.");
 
         // 2) Nem elérhető időszak ellenőrzése (szerviz/törött/admin hold stb.)
         if (car.UnavailableFrom.HasValue && car.UnavailableTo.HasValue)
@@ -110,6 +112,21 @@ public class RentalManager : IRentalManager
                     $"Car is unavailable due to {reason} from {car.UnavailableFrom:yyyy-MM-dd} to {car.UnavailableTo:yyyy-MM-dd}.{note}"
                 );
             }
+        }
+
+        // 2.5) Már meglévő foglalások ellenőrzése
+        var rentalOverlaps = await _db.Rentals.AnyAsync(r =>
+            r.CarId == dto.CarId &&
+            r.Status != CarRentStatus.Rejected &&
+            r.Status != CarRentStatus.Returned &&
+
+            dto.StartDate < r.EndDate &&
+            dto.EndDate > r.StartDate
+        , ct);
+
+        if (rentalOverlaps)
+        {
+            throw new ArgumentException("Car is already booked for the selected period.");
         }
 
         // 3) Guest / user ellenőrzés (ahogy nálad volt)
@@ -195,9 +212,11 @@ public class RentalManager : IRentalManager
         return true;
     }
 
-    //public async Task<int> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default)
-    //{
-    //    return await RequestAsync(dto, ct);
-    //}
-    // Ezt kiszedtem mert hibás, illetve nem tudom mire jo, enélkül is működik a controller, mert a RequestAsync-t hívja meg. Ha kell, vissza lehet tenni, de akkor a visszatérési érték típusa Rental kell legyen, nem int.
+    public Task<List<Rental>> GetByUserIdAsync(int userId, CancellationToken ct = default) =>
+    _db.Rentals
+        .AsNoTracking()
+        .Include(r => r.Car)
+        .Where(r => r.UserId == userId)
+        .OrderByDescending(r => r.Id)
+        .ToListAsync(ct);
 }

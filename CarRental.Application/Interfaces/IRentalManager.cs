@@ -16,6 +16,8 @@ public interface IRentalManager
     Task<bool> RejectAsync(int rentalId, int approvedByUserId, CancellationToken ct = default);
 
     Task<bool> CloseAsync(int rentalId, CancellationToken ct = default);
+    Task<List<Rental>> GetByUserIdAsync(int userId, CancellationToken ct = default);
+}
 
     //Task<Rental> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default) => RequestAsync(dto, ct);
 }
