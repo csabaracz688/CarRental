@@ -123,6 +123,7 @@ public class RentalsController : ControllerBase
         => await _rentals.CloseAsync(id) ? NoContent() : NotFound();
 
     [HttpPost("{id:int}/return")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
     public async Task<IActionResult> Return(int id, CancellationToken ct)
     {
         try
