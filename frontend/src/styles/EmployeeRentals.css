@@ -1,0 +1,72 @@
+.employee-rentals-page {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.employee-rentals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.employee-rental-card {
+  display: flex;
+  gap: 20px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  align-items: center;
+}
+
+.employee-rental-image {
+  width: 230px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #eee;
+}
+
+.employee-rental-info {
+  flex: 1;
+}
+
+.employee-rental-info h2 {
+  margin-bottom: 10px;
+}
+
+.employee-rental-info p {
+  margin: 6px 0;
+}
+
+.employee-rental-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+}
+
+.approve-btn,
+.reject-btn {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+.approve-btn {
+  background: #28a745;
+}
+
+.reject-btn {
+  background: #dc3545;
+}
+
+.approve-btn:hover {
+  background: #218838;
+}
+
+.reject-btn:hover {
+  background: #c82333;
+}
