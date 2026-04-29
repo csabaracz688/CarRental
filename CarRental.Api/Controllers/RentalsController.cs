@@ -1,3 +1,4 @@
+using CarRental.Application.Common.Exceptions;
 using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
 using CarRental.Domain.Constants;
@@ -124,10 +125,23 @@ public class RentalsController : ControllerBase
     public async Task<IActionResult> Close(int id)
         => await _rentals.CloseAsync(id) ? NoContent() : NotFound();
 
-    private static int? TryGetCurrentUserId(ClaimsPrincipal user)
+    [HttpPost("{id:int}/return")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> Return(int id, CancellationToken ct)
     {
-        var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        return int.TryParse(claimValue, out var parsed) ? parsed : null;
+        try
+        {
+            await _rentals.ReturnRentalAsync(id, ct);
+            return NoContent();
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     [HttpGet("user-rentals")]
@@ -142,5 +156,11 @@ public class RentalsController : ControllerBase
         var rentals = await _rentals.GetByUserIdAsync(userId.Value);
 
         return Ok(rentals);
+    }
+
+    private static int? TryGetCurrentUserId(ClaimsPrincipal user)
+    {
+        var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(claimValue, out var parsed) ? parsed : null;
     }
 }

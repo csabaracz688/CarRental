@@ -1,4 +1,4 @@
-﻿using CarRental.Application.Features;
+using CarRental.Application.Features;
 using CarRental.Domain.Entities;
 
 namespace CarRental.Application.Common.Interfaces;
@@ -17,7 +17,8 @@ public interface IRentalManager
     Task<bool> HandoverAsync(int rentalId, CancellationToken ct = default);
 
     Task<bool> CloseAsync(int rentalId, CancellationToken ct = default);
+
+    Task ReturnRentalAsync(int rentalId, CancellationToken ct = default);
+
     Task<List<Rental>> GetByUserIdAsync(int userId, CancellationToken ct = default);
 }
-
-    //Task<Rental> RequestRentalAsync(RequestRentalDto dto, CancellationToken ct = default) => RequestAsync(dto, ct);
