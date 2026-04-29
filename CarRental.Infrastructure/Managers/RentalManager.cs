@@ -49,7 +49,7 @@ public class RentalManager : IRentalManager
                 StartDate = r.StartDate,
                 EndDate = r.EndDate,
 
-                Status = (int)r.Status,
+                Status = r.Status,
 
                 ApprovedByUserId = r.ApprovedByUserId,
                 ApprovedByUserName = r.ApprovedByUser != null ? r.ApprovedByUser.UserName : null,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using CarRental.Domain.Enums;
 
 namespace CarRental.Application.Features;
 
@@ -15,8 +16,8 @@ public class RequestRentalDto
     public DateTime EndDate { get; set; }
 }
 
-public class RentalListDto 
-{ 
+public class RentalListDto
+{
     public int Id { get; set; }
 
     public int CarId { get; set; }
@@ -34,7 +35,7 @@ public class RentalListDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 
-    public int Status { get; set; }
+    public CarRentStatus Status { get; set; }
     public int? ApprovedByUserId { get; set; }
     public string? ApprovedByUserName { get; set; }
 
