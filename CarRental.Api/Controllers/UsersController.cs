@@ -1,4 +1,6 @@
 ﻿using CarRental.Application.Users;
+using CarRental.Domain.Constants;
+using CarRental.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -17,18 +19,15 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize]
+    [Authorize(Roles = $"{RoleConstants.Customer},{RoleConstants.Admin}")]
     public async Task<IActionResult> Get(int id)
     {
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (userIdClaim == null)
+        if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
             return Unauthorized();
 
-        var userId = int.Parse(userIdClaim);
-
-        if(!string.Equals(role, "CUSTOMER", StringComparison.OrdinalIgnoreCase) || userId != id)
+        if (userId != id)
             return Forbid();
 
         var user = await _userManager.GetByIdAsync(id);
@@ -48,7 +47,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize]
+    [Authorize(Roles = $"{RoleConstants.Customer},{RoleConstants.Admin}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserProfileDto dto)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -61,5 +60,4 @@ public class UsersController : ControllerBase
         await _userManager.UpdateProfileAsync(id, dto);
         return NoContent();
     }
-
 }
