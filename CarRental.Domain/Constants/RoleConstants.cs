@@ -1,4 +1,5 @@
 namespace CarRental.Domain.Constants;
+using CarRental.Domain.Enums;
 
 /// <summary>
 /// Konstans role értékek az authorization attributumokhoz
