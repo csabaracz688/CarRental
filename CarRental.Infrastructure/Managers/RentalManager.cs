@@ -1,4 +1,5 @@
-﻿using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Common.Exceptions;
+using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
@@ -86,6 +87,7 @@ public class RentalManager : IRentalManager
             })
             .ToListAsync(ct);
     }
+
     public async Task<Rental> RequestAsync(RequestRentalDto dto, CancellationToken ct = default)
     {
         // 1) Car lekérés (nem csak AnyAsync), mert kell az Unavailable info
@@ -217,21 +219,69 @@ public class RentalManager : IRentalManager
 
     public async Task<bool> CloseAsync(int rentalId, CancellationToken ct = default)
     {
-        var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
-        if (rental is null) return false;
+        try
+        {
+            await ReturnRentalAsync(rentalId, ct);
+            return true;
+        }
+        catch (NotFoundException)
+        {
+            return false;
+        }
+        catch (ConflictException)
+        {
+            return false;
+        }
+    }
+
+
+
+    public async Task ReturnRentalAsync(int rentalId, CancellationToken ct = default)
+    {
+        var rental = await _db.Rentals
+            .Include(r => r.Car)
+            .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+
+        if (rental == null)
+            throw new NotFoundException($"Rental not found. rentalId: {rentalId}");
+
+        if (rental.Status == CarRentStatus.Returned)
+        {
+            return;
+        }
+
+        if (rental.Status != CarRentStatus.Handed)
+        {
+            throw new ConflictException(
+                $"Rental cannot be returned. Current status: {rental.Status}");
+        }
+
 
         rental.Status = CarRentStatus.Returned;
         rental.ClosedAt = DateTime.UtcNow;
 
+        if (rental.Car != null)
+        {
+            var hasActiveRentals = await _db.Rentals.AnyAsync(r =>
+                r.CarId == rental.CarId &&
+                r.Id != rental.Id &&
+                (r.Status == CarRentStatus.Approved ||
+                 r.Status == CarRentStatus.Handed), ct);
+
+            if (!hasActiveRentals && rental.Car.Status == CarStatus.Rented)
+            {
+                rental.Car.Status = CarStatus.Available;
+            }
+        }
+
         await _db.SaveChangesAsync(ct);
-        return true;
     }
 
     public Task<List<Rental>> GetByUserIdAsync(int userId, CancellationToken ct = default) =>
-    _db.Rentals
-        .AsNoTracking()
-        .Include(r => r.Car)
-        .Where(r => r.UserId == userId)
-        .OrderByDescending(r => r.Id)
-        .ToListAsync(ct);
+        _db.Rentals
+            .AsNoTracking()
+            .Include(r => r.Car)
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.Id)
+            .ToListAsync(ct);
 }
