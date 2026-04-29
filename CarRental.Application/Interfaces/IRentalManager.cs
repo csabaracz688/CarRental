@@ -5,7 +5,7 @@ namespace CarRental.Application.Common.Interfaces;
 
 public interface IRentalManager
 {
-    Task<List<Rental>> GetAllAsync(CancellationToken ct = default);
+    Task<List<RentalListDto>> GetAllAsync(CancellationToken ct = default);
 
     Task<List<RentalListDto>> GetPendingAsync(CancellationToken ct = default);
 

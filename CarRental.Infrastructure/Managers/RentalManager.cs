@@ -16,13 +16,40 @@ public class RentalManager : IRentalManager
         _db = db;
     }
 
-    public Task<List<Rental>> GetAllAsync(CancellationToken ct = default) =>
-        _db.Rentals.AsNoTracking()
-            .Include(r => r.Car)
-            .Include(r => r.User)
-            .Include(r => r.ApprovedByUser)
+    public async Task<List<RentalListDto>> GetAllAsync(CancellationToken ct = default)
+    {
+        return await _db.Rentals
+            .AsNoTracking()
             .OrderByDescending(r => r.Id)
+            .Select(r => new RentalListDto
+            {
+                Id = r.Id,
+
+                CarId = r.CarId,
+                LicensePlate = r.Car.LicensePlate,
+                CarBrand = r.Car.Brand,
+                CarModel = r.Car.Model,
+
+                UserId = r.UserId,
+                UserName = r.User != null ? r.User.UserName : null,
+
+                GuestName = r.GuestName,
+                GuestEmail = r.GuestEmail,
+                GuestPhone = r.GuestPhone,
+
+                StartDate = r.StartDate,
+                EndDate = r.EndDate,
+
+                Status = r.Status,
+
+                ApprovedByUserId = r.ApprovedByUserId,
+                ApprovedByUserName = r.ApprovedByUser != null ? r.ApprovedByUser.UserName : null,
+
+                HandedOverAt = r.HandedOverAt,
+                ClosedAt = r.ClosedAt
+            })
             .ToListAsync(ct);
+    }
 
     public async Task<List<RentalListDto>> GetPendingAsync(CancellationToken ct = default)
     {
