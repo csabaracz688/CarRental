@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import "../styles/UserRentals.css";
 import { useNavigate } from "react-router-dom";
+import "../styles/UserRentals.css";
 
 export default function UserRentals() {
   const [rentals, setRentals] = useState([]);
@@ -10,6 +10,12 @@ export default function UserRentals() {
   useEffect(() => {
     const loadRentals = async () => {
       try {
+        if (!token) {
+          console.error("No token found");
+          navigate("/login");
+          return;
+        }
+
         const res = await fetch("https://localhost:7077/api/rentals/user-rentals", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -20,6 +26,12 @@ export default function UserRentals() {
 
         if (!res.ok) {
           console.error("Backend error:", res.status, text);
+
+          if (res.status === 401) {
+            localStorage.clear();
+            navigate("/login");
+          }
+
           return;
         }
 
@@ -30,15 +42,14 @@ export default function UserRentals() {
     };
 
     loadRentals();
-  }, [token]);
+  }, [token, navigate]);
 
   return (
-      <div className="user-rentals-page">
-
-    <button className="back-btn" onClick={() => navigate("/")}>
-      ← Back
-    </button>
     <div className="user-rentals-page">
+      <button className="back-btn" onClick={() => navigate("/")}>
+        ← Back
+      </button>
+
       <h1>My Rentals</h1>
 
       {rentals.length === 0 ? (
@@ -49,7 +60,11 @@ export default function UserRentals() {
             <div key={rental.id} className="rental-card">
               <img
                 className="rental-car-image"
-                src={rental.car?.imageUrl || (rental.car?.imagePath  ? `https://localhost:7077/uploads/${rental.car.imagePath}`  : "https://via.placeholder.com/300x180")
+                src={
+                  rental.car?.imageUrl ||
+                  (rental.car?.imagePath
+                    ? `https://localhost:7077/uploads/${rental.car.imagePath}`
+                    : "https://via.placeholder.com/300x180")
                 }
                 alt={`${rental.car?.brand} ${rental.car?.model}`}
               />
@@ -81,7 +96,6 @@ export default function UserRentals() {
           ))}
         </div>
       )}
-    </div>
     </div>
   );
 }
