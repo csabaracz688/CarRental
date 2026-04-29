@@ -68,6 +68,11 @@ public class RentalsController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            if (ex.Message.StartsWith("Only ", StringComparison.OrdinalIgnoreCase))
+            {
+                return Conflict(ex.Message);
+            }
+
             return BadRequest(ex.Message);
         }
     }
@@ -88,7 +93,26 @@ public class RentalsController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            if (ex.Message.StartsWith("Only ", StringComparison.OrdinalIgnoreCase))
+            {
+                return Conflict(ex.Message);
+            }
+
             return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("{id:int}/handover")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> Handover(int id)
+    {
+        try
+        {
+            return await _rentals.HandoverAsync(id) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return Conflict(ex.Message);
         }
     }
 

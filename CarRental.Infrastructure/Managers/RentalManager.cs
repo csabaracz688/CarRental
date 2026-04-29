@@ -200,6 +200,21 @@ public class RentalManager : IRentalManager
         return true;
     }
 
+    public async Task<bool> HandoverAsync(int rentalId, CancellationToken ct = default)
+    {
+        var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+        if (rental is null) return false;
+
+        if (rental.Status != CarRentStatus.Approved)
+            throw new ArgumentException("Only approved rentals can be handed over.");
+
+        rental.Status = CarRentStatus.Handed;
+        rental.HandedOverAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
     public async Task<bool> CloseAsync(int rentalId, CancellationToken ct = default)
     {
         var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
