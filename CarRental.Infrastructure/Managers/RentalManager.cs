@@ -260,7 +260,7 @@ public class RentalManager : IRentalManager
                 (r.Status == CarRentStatus.Approved ||
                  r.Status == CarRentStatus.Handed), ct);
 
-            if (!hasActiveRentals)
+            if (!hasActiveRentals && rental.Car.Status == CarStatus.Rented)
             {
                 rental.Car.Status = CarStatus.Available;
             }
