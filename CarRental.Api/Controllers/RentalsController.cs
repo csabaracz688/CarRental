@@ -92,6 +92,19 @@ public class RentalsController : ControllerBase
         }
     }
 
+    [HttpPost("{id:int}/handover")]
+    public async Task<IActionResult> Handover(int id)
+    {
+        try
+        {
+            return await _rentals.HandoverAsync(id) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return Conflict(ex.Message);
+        }
+    }
+
     [HttpPost("{id:int}/close")]
     [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
     public async Task<IActionResult> Close(int id)
