@@ -1,5 +1,7 @@
+using CarRental.Application.Common.Exceptions;
 using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
+using CarRental.Domain.Constants;
 using CarRental.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,10 +22,12 @@ public class RentalsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> GetAll()
         => Ok(await _rentals.GetAllAsync());
 
     [HttpGet("pending")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> GetPending(CancellationToken ct)
         => Ok(await _rentals.GetPendingAsync(ct));
 
@@ -53,7 +57,7 @@ public class RentalsController : ControllerBase
     }
 
     [HttpPost("{id:int}/approve")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> Approve(int id, [FromQuery] int? approvedByUserId)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
@@ -68,12 +72,17 @@ public class RentalsController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            if (ex.Message.StartsWith("Only ", StringComparison.OrdinalIgnoreCase))
+            {
+                return Conflict(ex.Message);
+            }
+
             return BadRequest(ex.Message);
         }
     }
 
     [HttpPost("{id:int}/reject")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> Reject(int id, [FromQuery] int? approvedByUserId)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
@@ -88,23 +97,55 @@ public class RentalsController : ControllerBase
         }
         catch (ArgumentException ex)
         {
+            if (ex.Message.StartsWith("Only ", StringComparison.OrdinalIgnoreCase))
+            {
+                return Conflict(ex.Message);
+            }
+
             return BadRequest(ex.Message);
         }
     }
 
+    [HttpPost("{id:int}/handover")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
+    public async Task<IActionResult> Handover(int id)
+    {
+        try
+        {
+            return await _rentals.HandoverAsync(id) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return Conflict(ex.Message);
+        }
+    }
+
     [HttpPost("{id:int}/close")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.Officer}")]
     public async Task<IActionResult> Close(int id)
         => await _rentals.CloseAsync(id) ? NoContent() : NotFound();
 
-    private static int? TryGetCurrentUserId(ClaimsPrincipal user)
+    [HttpPost("{id:int}/return")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> Return(int id, CancellationToken ct)
     {
-        var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        return int.TryParse(claimValue, out var parsed) ? parsed : null;
+        try
+        {
+            await _rentals.ReturnRentalAsync(id, ct);
+            return NoContent();
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     [HttpGet("user-rentals")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Customer)},{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    [Authorize(Roles = $"{RoleConstants.Customer},{RoleConstants.Admin}")]
     public async Task<IActionResult> GetUserRentals()
     {
         var userId = TryGetCurrentUserId(User);
@@ -117,19 +158,9 @@ public class RentalsController : ControllerBase
         return Ok(rentals);
     }
 
-    [HttpPost("{id:int}/handover")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
-    public async Task<IActionResult> HandOver(int id, [FromBody] HandOverRentalDto dto)
+    private static int? TryGetCurrentUserId(ClaimsPrincipal user)
     {
-        try
-        {
-            return await _rentals.HandOverAsync(id, dto.HandedOverAt)
-                ? NoContent()
-                : NotFound();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(claimValue, out var parsed) ? parsed : null;
     }
 }

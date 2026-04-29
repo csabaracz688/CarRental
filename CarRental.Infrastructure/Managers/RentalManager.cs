@@ -1,4 +1,5 @@
-﻿using CarRental.Application.Common.Interfaces;
+using CarRental.Application.Common.Exceptions;
+using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
@@ -207,13 +208,16 @@ public class RentalManager : IRentalManager
         return true;
     }
 
-    public async Task<bool> CloseAsync(int rentalId, CancellationToken ct = default)
+    public async Task<bool> HandoverAsync(int rentalId, CancellationToken ct = default)
     {
         var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
         if (rental is null) return false;
 
-        rental.Status = CarRentStatus.Returned;
-        rental.ClosedAt = DateTime.UtcNow;
+        if (rental.Status != CarRentStatus.Approved)
+            throw new ArgumentException("Only approved rentals can be handed over.");
+
+        rental.Status = CarRentStatus.Handed;
+        rental.HandedOverAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);
         return true;
@@ -231,5 +235,65 @@ public class RentalManager : IRentalManager
 
         await _db.SaveChangesAsync(ct);
         return true;
+    }
+
+    public async Task<bool> CloseAsync(int rentalId, CancellationToken ct = default)
+    {
+        try
+        {
+            await ReturnRentalAsync(rentalId, ct);
+            return true;
+        }
+        catch (NotFoundException)
+        {
+            return false;
+        }
+        catch (ConflictException)
+        {
+            return false;
+        }
+    }
+
+
+
+    public async Task ReturnRentalAsync(int rentalId, CancellationToken ct = default)
+    {
+        var rental = await _db.Rentals
+            .Include(r => r.Car)
+            .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+
+        if (rental == null)
+            throw new NotFoundException($"Rental not found. rentalId: {rentalId}");
+
+        if (rental.Status == CarRentStatus.Returned)
+        {
+            return;
+        }
+
+        if (rental.Status != CarRentStatus.Handed)
+        {
+            throw new ConflictException(
+                $"Rental cannot be returned. Current status: {rental.Status}");
+        }
+
+
+        rental.Status = CarRentStatus.Returned;
+        rental.ClosedAt = DateTime.UtcNow;
+
+        if (rental.Car != null)
+        {
+            var hasActiveRentals = await _db.Rentals.AnyAsync(r =>
+                r.CarId == rental.CarId &&
+                r.Id != rental.Id &&
+                (r.Status == CarRentStatus.Approved ||
+                 r.Status == CarRentStatus.Handed), ct);
+
+            if (!hasActiveRentals && rental.Car.Status == CarStatus.Rented)
+            {
+                rental.Car.Status = CarStatus.Available;
+            }
+        }
+
+        await _db.SaveChangesAsync(ct);
     }
 }

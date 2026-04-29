@@ -1,5 +1,6 @@
 using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
+using CarRental.Domain.Constants;
 using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -35,22 +36,36 @@ public class CarsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = nameof(RoleTypes.Admin))]
+    [Authorize(Roles = RoleConstants.Admin)]
     public async Task<IActionResult> Create([FromForm] CreateCarDto dto)
     {
-
-        var created = await _cars.CreateAsync(dto);
-
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        try
+        {
+            var created = await _cars.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message, details = ex.InnerException?.Message });
+        }
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = nameof(RoleTypes.Admin))]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateCarDto dto)
-        => await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+    [Authorize(Roles = RoleConstants.Admin)]
+    public async Task<IActionResult> Update(int id, [FromForm] UpdateCarDto dto)
+    {
+        try
+        {
+            return await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message, details = ex.InnerException?.Message });
+        }
+    }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = nameof(RoleTypes.Admin))]
+    [Authorize(Roles = RoleConstants.Admin)]
     public async Task<IActionResult> Delete(int id)
         => await _cars.DeleteAsync(id) ? NoContent() : NotFound();
 
@@ -129,6 +144,7 @@ public class CarsController : ControllerBase
         return Ok(rentals);
     }
     [HttpGet("search")]
+    [AllowAnonymous]
     public async Task<IActionResult> Search(
     [FromQuery] DateTime start,
     [FromQuery] DateTime end,
@@ -149,6 +165,4 @@ public class CarsController : ControllerBase
 
         return Ok(result);
     }
-
-
 }
