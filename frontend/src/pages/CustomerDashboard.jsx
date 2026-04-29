@@ -33,7 +33,7 @@ export default function CustomerDashboard() {
         <div className="card">
           <h2>Saját foglalások</h2>
           <p>Aktív és korábbi bérléseid áttekintése.</p>
-          <Link to="/customer/rentals">
+          <Link to="/user-rentals">
             <button>Megnyitás</button>
           </Link>
         </div>

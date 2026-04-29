@@ -10,7 +10,7 @@ namespace CarRental.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+[Authorize]
 public class RentalsController : ControllerBase
 {
     private readonly IRentalManager _rentals;
@@ -21,15 +21,41 @@ public class RentalsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct =default) => Ok(await _rentals.GetAllAsync(ct));
+    public async Task<IActionResult> GetAll()
+        => Ok(await _rentals.GetAllAsync());
+
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPending(CancellationToken ct)
+        => Ok(await _rentals.GetPendingAsync(ct));
 
     [HttpPost("request")]
     [AllowAnonymous]
-    public async Task<IActionResult> CreateRequest([FromBody] RequestRentalDto dto, CancellationToken ct)
-        => Ok(await _rentals.RequestAsync(dto, ct));
+    public async Task<IActionResult> CreateRequest([FromBody] RequestRentalDto dto)
+    {
+        try
+        {
+            var currentUserId = TryGetCurrentUserId(User);
+
+            if (currentUserId.HasValue)
+            {
+                dto.UserId = currentUserId.Value;
+                dto.GuestName = null;
+                dto.GuestEmail = null;
+                dto.GuestPhone = null;
+            }
+
+            var rental = await _rentals.RequestAsync(dto);
+            return Ok(rental);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 
     [HttpPost("{id:int}/approve")]
-    public async Task<IActionResult> Approve(int id, [FromQuery] int? approvedByUserId, CancellationToken ct)
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> Approve(int id, [FromQuery] int? approvedByUserId)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
         if (actingUserId is null)
@@ -37,11 +63,19 @@ public class RentalsController : ControllerBase
             return BadRequest("Approver user id is required.");
         }
 
-        return await _rentals.ApproveAsync(id, actingUserId.Value, ct) ? NoContent() : NotFound();
+        try
+        {
+            return await _rentals.ApproveAsync(id, actingUserId.Value) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost("{id:int}/reject")]
-    public async Task<IActionResult> Reject(int id, [FromQuery] int? approvedByUserId, CancellationToken ct)
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> Reject(int id, [FromQuery] int? approvedByUserId)
     {
         var actingUserId = TryGetCurrentUserId(User) ?? approvedByUserId;
         if (actingUserId is null)
@@ -49,18 +83,20 @@ public class RentalsController : ControllerBase
             return BadRequest("Approver user id is required.");
         }
 
-        return await _rentals.RejectAsync(id, actingUserId.Value, ct) ? NoContent() : NotFound();
+        try
+        {
+            return await _rentals.RejectAsync(id, actingUserId.Value) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPost("{id:int}/close")]
-    public async Task<IActionResult> Close(int id, CancellationToken ct)
-        => await _rentals.CloseAsync(id, ct) ? NoContent() : NotFound();
-
-    private static int? TryGetCurrentUserId(ClaimsPrincipal user)
-    {
-        var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        return int.TryParse(claimValue, out var parsed) ? parsed : null;
-    }
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> Close(int id)
+        => await _rentals.CloseAsync(id) ? NoContent() : NotFound();
 
     [HttpPost("{id:int}/return")]
     public async Task<IActionResult> Return(int id, CancellationToken ct)
@@ -68,7 +104,7 @@ public class RentalsController : ControllerBase
         try
         {
             await _rentals.ReturnRentalAsync(id, ct);
-            return Ok();
+            return NoContent();
         }
         catch (NotFoundException ex)
         {
@@ -80,4 +116,23 @@ public class RentalsController : ControllerBase
         }
     }
 
+    [HttpGet("user-rentals")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Customer)},{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> GetUserRentals()
+    {
+        var userId = TryGetCurrentUserId(User);
+
+        if (userId is null)
+            return Unauthorized(new { message = "User is not authenticated." });
+
+        var rentals = await _rentals.GetByUserIdAsync(userId.Value);
+
+        return Ok(rentals);
+    }
+
+    private static int? TryGetCurrentUserId(ClaimsPrincipal user)
+    {
+        var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(claimValue, out var parsed) ? parsed : null;
+    }
 }

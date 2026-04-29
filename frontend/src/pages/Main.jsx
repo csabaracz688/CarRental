@@ -36,6 +36,9 @@ export default function MainPage() {
         </div>
 
         <div className="nav-buttons">
+          <Link to="/user-rentals" className="my-rentals-btn">
+               My rentals
+          </Link>
 
           {!token ? (
             <>
@@ -82,7 +85,7 @@ export default function MainPage() {
             <p>No cars available yet.</p>
           ) : (
             cars.map((car) => (
-              <div key={car.id} className="car-card">
+              <div key={car.id} className="car-card" onClick={() => navigate(`/cars/${car.id}`)}>
 
                 <img
                   src={car.imageUrl || "https://via.placeholder.com/300"}
@@ -98,6 +101,7 @@ export default function MainPage() {
                 </p>
 
               </div>
+              
               
             ))
           )}
