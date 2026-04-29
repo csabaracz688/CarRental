@@ -1,3 +1,5 @@
+using CarRental.Domain.Enums;
+
 namespace CarRental.Domain.Constants;
 
 /// <summary>

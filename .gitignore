@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 # Frontend build artifacts
 frontend/obj/
+frontend/obj/
+frontend/obj\\

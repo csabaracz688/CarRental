@@ -4,15 +4,20 @@ import "../styles/Main.css";
 
 export default function MainPage() {
   const navigate = useNavigate();
+
   const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
+  console.log("ROLE:", role);
+
+  const isCustomer = role?.toLowerCase() === "customer";
 
   const [cars, setCars] = useState([]);
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/login");
+    navigate("/");
   };
-
   // 🔥 AUTÓK LEKÉRÉSE BACKENDRŐL
   useEffect(() => {
     fetch("https://localhost:7077/api/cars")
@@ -36,28 +41,36 @@ export default function MainPage() {
         </div>
 
         <div className="nav-buttons">
+  {!token ? (
+    <>
+      <Link to="/login" className="login-btn">Login</Link>
+      <Link to="/register" className="register-btn">Register</Link>
+    </>
+  ) : (
+    <>
+      {isCustomer && (
+        <>
           <Link to="/user-rentals" className="my-rentals-btn">
-               My rentals
+            My rentals
           </Link>
 
-          {!token ? (
-            <>
-              <Link to="/login" className="login-btn">Login</Link>
-              <Link to="/register" className="register-btn">Register</Link>
-            </>
-          ) : (
-            <>
-              <Link to="/profile" className="profile-icon" title="Profil" aria-label="Profile">
-                👤
-              </Link>
+          <Link
+            to="/profile"
+            className="profile-icon"
+            title="Profil"
+            aria-label="Profile"
+          >
+            👤
+          </Link>
+        </>
+      )}
 
-              <button onClick={handleLogout} className="logout-btn">
-                Logout
-              </button>
-            </>
-          )}
-
-        </div>
+      <button onClick={handleLogout} className="logout-btn">
+        Logout
+      </button>
+    </>
+  )}
+</div>
       </nav>
 
       {/* HERO */}
