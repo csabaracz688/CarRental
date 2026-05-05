@@ -46,7 +46,7 @@ public class CarsController : ControllerBase
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = nameof(RoleTypes.Admin))]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateCarDto dto)
+    public async Task<IActionResult> Update(int id, [FromForm] UpdateCarDto dto)
         => await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
 
     [HttpDelete("{id:int}")]

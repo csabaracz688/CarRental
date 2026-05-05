@@ -155,6 +155,14 @@ public class CarManager : ICarManager
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
+            if (!string.IsNullOrWhiteSpace(car.ImagePath))
+            {
+                var oldPath = Path.Combine(folder, car.ImagePath);
+
+                if (File.Exists(oldPath))
+                    File.Delete(oldPath);
+            }
+
             var fileName = Guid.NewGuid() + Path.GetExtension(dto.Image.FileName);
             var path = Path.Combine(folder, fileName);
 
@@ -163,8 +171,7 @@ public class CarManager : ICarManager
 
             car.ImagePath = fileName;
         }
-
-        await _db.SaveChangesAsync(ct);
+            await _db.SaveChangesAsync(ct); 
         return true;
     }
 
