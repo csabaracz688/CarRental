@@ -13,7 +13,6 @@ export default function MainPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [modelFilter, setModelFilter] = useState("");
-  const [availabilityFilter, setAvailabilityFilter] = useState("");
 
   const handleLogout = () => {
     localStorage.clear();
@@ -27,16 +26,21 @@ export default function MainPage() {
       .catch((err) => console.error("Error loading cars:", err));
   }, []);
 
-  const brands = useMemo(() => {
-    return [...new Set(cars.map((car) => car.brand).filter(Boolean))];
+  //  CSAK ELÉRHETŐ AUTÓK
+  const availableCars = useMemo(() => {
+    return cars.filter((car) => car.status === 0);
   }, [cars]);
+
+  const brands = useMemo(() => {
+    return [...new Set(availableCars.map((car) => car.brand).filter(Boolean))];
+  }, [availableCars]);
 
   const models = useMemo(() => {
-    return [...new Set(cars.map((car) => car.model).filter(Boolean))];
-  }, [cars]);
+    return [...new Set(availableCars.map((car) => car.model).filter(Boolean))];
+  }, [availableCars]);
 
   const filteredCars = useMemo(() => {
-    return cars.filter((car) => {
+    return availableCars.filter((car) => {
       const search = searchTerm.toLowerCase();
 
       const matchesSearch =
@@ -47,16 +51,9 @@ export default function MainPage() {
       const matchesBrand = brandFilter ? car.brand === brandFilter : true;
       const matchesModel = modelFilter ? car.model === modelFilter : true;
 
-      const matchesAvailability =
-        availabilityFilter === ""
-          ? true
-          : availabilityFilter === "available"
-          ? car.status === 0
-          : car.status !== 0;
-
-      return matchesSearch && matchesBrand && matchesModel && matchesAvailability;
+      return matchesSearch && matchesBrand && matchesModel;
     });
-  }, [cars, searchTerm, brandFilter, modelFilter, availabilityFilter]);
+  }, [availableCars, searchTerm, brandFilter, modelFilter]);
 
   return (
     <div className="main-container">
@@ -87,7 +84,7 @@ export default function MainPage() {
                     My rentals
                   </Link>
 
-                  <Link to="/profile" className="profile-icon" title="Profil" aria-label="Profile">
+                  <Link to="/profile" className="profile-icon">
                     👤
                   </Link>
                 </>
@@ -133,22 +130,12 @@ export default function MainPage() {
             ))}
           </select>
 
-          <select
-            value={availabilityFilter}
-            onChange={(e) => setAvailabilityFilter(e.target.value)}
-          >
-            <option value="">All statuses</option>
-            <option value="available">Available</option>
-            <option value="unavailable">Unavailable</option>
-          </select>
-
           <button
             className="clear-filters-btn"
             onClick={() => {
               setSearchTerm("");
               setBrandFilter("");
               setModelFilter("");
-              setAvailabilityFilter("");
             }}
           >
             Clear filters
@@ -173,9 +160,7 @@ export default function MainPage() {
                 <h3>{car.brand} {car.model}</h3>
                 <p>{car.dailyPrice} Ft/day</p>
 
-                <p className="car-status">
-                  {car.status === 0 ? "Available" : "Unavailable"}
-                </p>
+                <p className="car-status">Available</p>
               </div>
             ))
           )}

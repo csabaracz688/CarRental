@@ -100,6 +100,9 @@ public class RentalManager : IRentalManager
         if (car is null)
             throw new ArgumentException("Invalid CarId.");
 
+        if (car.Status != CarStatus.Available)
+            throw new ArgumentException("Car is not available for rental.");
+
         if (dto.StartDate >= dto.EndDate)
             throw new ArgumentException("StartDate must be before EndDate.");
 

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "../styles/AdminCars.css";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminCars() {
   const [cars, setCars] = useState([]);
   const [editingCar, setEditingCar] = useState(null);
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   const loadCars = async () => {
     try {
@@ -27,24 +29,51 @@ export default function AdminCars() {
   }, []);
 
   const deleteCar = async (id) => {
-    const confirmed = window.confirm("Biztosan törölni szeretnéd ezt az autót?");
-    if (!confirmed) return;
+  const confirmed = window.confirm("Biztosan törölni szeretnéd ezt az autót?");
+  if (!confirmed) return;
 
-    const res = await fetch(`https://localhost:7077/api/cars/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const res = await fetch(`https://localhost:7077/api/cars/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-    if (!res.ok) {
-      alert("Törlés sikertelen!");
+  if (res.status === 409) {
+    const shouldDeactivate = window.confirm(
+      "Az autóhoz aktív bérlés tartozik, ezért nem törölhető. Szeretnéd inkább inaktívvá tenni?"
+    );
+
+    if (!shouldDeactivate) return;
+
+    const deactivateRes = await fetch(
+      `https://localhost:7077/api/cars/${id}/deactivate`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!deactivateRes.ok) {
+      alert("Inaktiválás sikertelen!");
       return;
     }
 
-    alert("Autó törölve!");
+    alert("Autó inaktiválva!");
     loadCars();
-  };
+    return;
+  }
+
+  if (!res.ok) {
+    alert("Törlés sikertelen!");
+    return;
+  }
+
+  alert("Autó törölve!");
+  loadCars();
+};
 
   const startEdit = (car) => {
     setEditingCar({
@@ -59,6 +88,9 @@ export default function AdminCars() {
       unavailableTo: car.unavailableTo ? car.unavailableTo.slice(0, 10) : "",
       unavailableReason: car.unavailableReason ?? "",
       unavailableNote: car.unavailableNote || "",
+      image: null,
+      currentImageUrl: car.imageUrl || "",
+      previewImageUrl: car.imageUrl || "",
     });
   };
 
@@ -71,33 +103,57 @@ export default function AdminCars() {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    setEditingCar((prev) => ({
+      ...prev,
+      image: file,
+      previewImageUrl: URL.createObjectURL(file),
+    }));
+  };
+
   const saveEdit = async (e) => {
     e.preventDefault();
 
-    const body = {
-      id: editingCar.id,
-      licensePlate: editingCar.licensePlate,
-      brand: editingCar.brand,
-      model: editingCar.model,
-      distanceKm: Number(editingCar.distanceKm),
-      dailyPrice: Number(editingCar.dailyPrice),
-      status: Number(editingCar.status),
-      unavailableFrom: editingCar.unavailableFrom || null,
-      unavailableTo: editingCar.unavailableTo || null,
-      unavailableReason:
-        editingCar.unavailableReason === ""
-          ? null
-          : Number(editingCar.unavailableReason),
-      unavailableNote: editingCar.unavailableNote || null,
-    };
+    const formData = new FormData();
+
+    formData.append("Id", editingCar.id);
+    formData.append("LicensePlate", editingCar.licensePlate);
+    formData.append("Brand", editingCar.brand);
+    formData.append("Model", editingCar.model);
+    formData.append("DistanceKm", Number(editingCar.distanceKm));
+    formData.append("DailyPrice", Number(editingCar.dailyPrice));
+    formData.append("Status", Number(editingCar.status));
+
+    if (editingCar.unavailableFrom) {
+      formData.append("UnavailableFrom", editingCar.unavailableFrom);
+    }
+
+    if (editingCar.unavailableTo) {
+      formData.append("UnavailableTo", editingCar.unavailableTo);
+    }
+
+    if (editingCar.unavailableReason !== "") {
+      formData.append("UnavailableReason", Number(editingCar.unavailableReason));
+    }
+
+    if (editingCar.unavailableNote) {
+      formData.append("UnavailableNote", editingCar.unavailableNote);
+    }
+
+    if (editingCar.image) {
+      formData.append("Image", editingCar.image);
+    }
 
     const res = await fetch(`https://localhost:7077/api/cars/${editingCar.id}`, {
       method: "PUT",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(body),
+      body: formData,
     });
 
     if (!res.ok) {
@@ -113,7 +169,7 @@ export default function AdminCars() {
   };
 
   const getStatusText = (status) => {
-    switch (status) {
+    switch (Number(status)) {
       case 0:
         return "Elérhető";
       case 1:
@@ -127,6 +183,9 @@ export default function AdminCars() {
 
   return (
     <div className="admin-cars-page">
+      <button className="back-btn" onClick={() => navigate("/admin")}>
+        ← Back
+      </button>
       <h1>Admin Cars</h1>
       <p>Autók megtekintése, módosítása, törlése és státusz kezelése.</p>
 
@@ -156,7 +215,7 @@ export default function AdminCars() {
                 value={editingCar.model}
                 onChange={handleEditChange}
               />
-
+              <label>Kilométeróra:</label>
               <input
                 name="distanceKm"
                 type="number"
@@ -164,7 +223,7 @@ export default function AdminCars() {
                 value={editingCar.distanceKm}
                 onChange={handleEditChange}
               />
-
+              <label>Napi ár:</label>
               <input
                 name="dailyPrice"
                 type="number"
@@ -182,6 +241,22 @@ export default function AdminCars() {
                 <option value={1}>Nem elérhető</option>
                 <option value={2}>Kölcsönözve</option>
               </select>
+
+              <label>Kép módosítása:</label>
+
+              {editingCar.previewImageUrl && (
+                <img
+                  className="edit-image-preview"
+                  src={editingCar.previewImageUrl}
+                  alt="Autó előnézet"
+                />
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
 
               <label>Nem elérhető ettől:</label>
               <input

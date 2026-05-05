@@ -180,17 +180,25 @@ public class CarManager : ICarManager
         var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == id, ct);
         if (car is null) return false;
 
-        // kép törlése
+        var hasAnyRental = await _db.Rentals.AnyAsync(r => r.CarId == id, ct);
+
+        if (hasAnyRental)
+            throw new InvalidOperationException("CAR_HAS_RENTALS");
+
         if (!string.IsNullOrEmpty(car.ImagePath))
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", car.ImagePath);
+            var path = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot/uploads",
+                car.ImagePath
+            );
+
             if (File.Exists(path))
                 File.Delete(path);
         }
 
         _db.Cars.Remove(car);
         await _db.SaveChangesAsync(ct);
-
         return true;
     }
 

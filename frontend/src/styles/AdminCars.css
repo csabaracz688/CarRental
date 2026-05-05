@@ -158,3 +158,11 @@
     width: 90%;
   }
 }
+.edit-image-preview {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: #eee;
+}
