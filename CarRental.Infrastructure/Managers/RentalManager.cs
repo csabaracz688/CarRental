@@ -217,6 +217,20 @@ public class RentalManager : IRentalManager
         return true;
     }
 
+    public async Task<bool> HandOverAsync(int rentalId, DateTime handedOverAt, CancellationToken ct = default)
+    {
+        var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+        if (rental is null) return false;
+
+        if (rental.Status != CarRentStatus.Approved)
+            throw new ArgumentException("Only approved rentals can be handed over.");
+
+        rental.HandedOverAt = handedOverAt;
+
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
     public async Task<bool> CloseAsync(int rentalId, CancellationToken ct = default)
     {
         var rental = await _db.Rentals
@@ -232,53 +246,20 @@ public class RentalManager : IRentalManager
         rental.Status = CarRentStatus.Returned;
         rental.ClosedAt = DateTime.UtcNow;
 
-        var days = (rental.EndDate.Date - rental.StartDate.Date).Days;
-        if (days <= 0) days = 1;
+        if (rental.Car != null)
+        {
+            var hasActiveRentals = await _db.Rentals.AnyAsync(r =>
+                r.CarId == rental.CarId &&
+                r.Id != rental.Id &&
+                (r.Status == CarRentStatus.Approved ||
+                 r.Status == CarRentStatus.Handed), ct);
 
-        var dailyPrice = rental.Car.DailyPrice;
-        var totalPrice = days * dailyPrice;
-
-        var customerEmail = rental.User != null
-            ? rental.User.Email
-            : rental.GuestEmail;
-
-        var customerName = rental.User != null
-            ? rental.User.UserName
-            : rental.GuestName;
-
-        if (string.IsNullOrWhiteSpace(customerEmail))
-            throw new ArgumentException("Customer email is missing.");
-
-        var emailBody = $@"
-            <h2>CarRental Invoice</h2>
-
-            <p>Dear {customerName},</p>
-            <p>Your rental has been closed.</p>
-
-            <h3>Car details</h3>
-            <p><strong>Brand:</strong> {rental.Car.Brand}</p>
-            <p><strong>Model:</strong> {rental.Car.Model}</p>
-            <p><strong>License plate:</strong> {rental.Car.LicensePlate}</p>
-
-            <h3>Rental details</h3>
-            <p><strong>Start date:</strong> {rental.StartDate:yyyy-MM-dd}</p>
-            <p><strong>End date:</strong> {rental.EndDate:yyyy-MM-dd}</p>
-            <p><strong>Rental days:</strong> {days}</p>
-
-            <h3>Payment</h3>
-            <p><strong>Daily price:</strong> {dailyPrice} Ft</p>
-            <p><strong>Total price:</strong> {totalPrice} Ft</p>
-
-            <p>Thank you for using CarRental!</p>
-        ";
-
-        await _emailService.SendEmailAsync(
-            customerEmail,
-            "CarRental invoice",
-            emailBody
-        );
+            if (!hasActiveRentals && rental.Car.Status == CarStatus.Rented)
+            {
+                rental.Car.Status = CarStatus.Available;
+            }
+        }
 
         await _db.SaveChangesAsync(ct);
-        return true;
     }
 }

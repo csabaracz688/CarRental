@@ -117,19 +117,9 @@ public class RentalsController : ControllerBase
         return Ok(rentals);
     }
 
-    [HttpPost("{id:int}/handover")]
-    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
-    public async Task<IActionResult> HandOver(int id, [FromBody] HandOverRentalDto dto)
+    private static int? TryGetCurrentUserId(ClaimsPrincipal user)
     {
-        try
-        {
-            return await _rentals.HandOverAsync(id, dto.HandedOverAt)
-                ? NoContent()
-                : NotFound();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(claimValue, out var parsed) ? parsed : null;
     }
 }
