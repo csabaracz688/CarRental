@@ -117,9 +117,32 @@ public class RentalsController : ControllerBase
         return Ok(rentals);
     }
 
-    private static int? TryGetCurrentUserId(ClaimsPrincipal user)
+    [HttpGet("{id:int}/invoice")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> GetInvoice(int id)
     {
-        var claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        return int.TryParse(claimValue, out var parsed) ? parsed : null;
+        var html = await _rentals.GetInvoiceHtmlAsync(id);
+
+        if (html is null)
+            return NotFound();
+
+        return Content(html, "text/html");
     }
+
+    [HttpPost("{id:int}/handover")]
+    [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
+    public async Task<IActionResult> HandOver(int id, [FromBody] HandOverRentalDto dto)
+    {
+        try
+        {
+            return await _rentals.HandOverAsync(id, dto.HandedOverAt)
+                ? NoContent()
+                : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
 }

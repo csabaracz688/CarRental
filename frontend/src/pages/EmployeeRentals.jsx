@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 export default function EmployeeRentals() {
   const [rentals, setRentals] = useState([]);
   const [handoverDates, setHandoverDates] = useState({});
+  const [statusFilter, setStatusFilter] = useState("");
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
@@ -114,6 +115,36 @@ export default function EmployeeRentals() {
     loadRentals();
   };
 
+const openInvoice = async (id) => {
+  const res = await fetch(`https://localhost:7077/api/rentals/${id}/invoice`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Invoice error:", res.status, text);
+    alert("Számla megnyitása sikertelen!");
+    return;
+  }
+
+  const html = await res.text();
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+
+  window.open(url, "_blank");
+};
+const filteredRentals = rentals.filter((rental) => {
+  if (!statusFilter) return true;
+
+  const status = (rental.statusText || rental.status || "")
+    .toString()
+    .toLowerCase();
+
+  return status === statusFilter.toLowerCase();
+});
+
   return (
     <div className="employee-rentals-page">
       <button className="back-btn" onClick={() => navigate("/employee")}>
@@ -123,8 +154,21 @@ export default function EmployeeRentals() {
       <h1>Bérlések</h1>
       <p>Aktív és korábbi bérlések áttekintése.</p>
 
+      <div className="rental-filters">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">Összes státusz</option>
+          <option value="Requested">Requested</option>
+          <option value="Approved">Approved</option>
+          <option value="Returned">Returned</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+
       <div className="employee-rentals-list">
-        {rentals.map((rental) => (
+        {filteredRentals.map((rental) => (
           <div key={rental.id} className="employee-rental-card">
             <img
               className="employee-rental-image"
@@ -231,6 +275,16 @@ export default function EmployeeRentals() {
                   onClick={() => closeRental(rental.id)}
                 >
                   Kölcsönzés lezárása
+                </button>
+              )}
+
+              {(rental.statusText === "Returned" ||
+                rental.status === "Returned") && (
+                <button
+                  className="invoice-btn"
+                  onClick={() => openInvoice(rental.id)}
+                >
+                  Számla megtekintése
                 </button>
               )}
             </div>
