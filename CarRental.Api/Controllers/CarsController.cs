@@ -75,7 +75,7 @@ public class CarsController : ControllerBase
         {
             return Conflict(new
             {
-                message = "Az autóhoz tartozik aktív vagy korábbi bérlés, ezért nem törölhetõ."
+                message = "The car has active or previous rentals and cannot be deleted."
             });
         }
     }
@@ -147,7 +147,7 @@ public class CarsController : ControllerBase
             {
                 startDate = r.StartDate,
                 endDate = r.EndDate,
-                status = r.Status
+                status = (int)r.Status
             })
             .ToListAsync();
 
@@ -189,7 +189,7 @@ public class CarsController : ControllerBase
         car.Status = CarStatus.Unavailable;
         car.UnavailableFrom = DateTime.UtcNow;
         car.UnavailableReason = CarUnavailableReason.AdminHold;
-        car.UnavailableNote = "Admin által inaktiválva.";
+        car.UnavailableNote = "Deactivated by admin.";
 
         await _db.SaveChangesAsync();
 
