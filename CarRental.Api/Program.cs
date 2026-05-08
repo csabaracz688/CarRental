@@ -1,18 +1,21 @@
 using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Users;
+using CarRental.Application.Validators;
 using CarRental.Infrastructure;
 using CarRental.Infrastructure.Managers;
 using CarRental.Infrastructure.Persistence;
 using CarRental.Infrastructure.Persistence.Seeding;
 using CarRental.Infrastructure.Services;
+using CarRental.WebApi.Helpers;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,8 +45,15 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddInfrastructure();
 builder.Services.AddScoped<IEmailService, EmailService>();
-
 builder.Services.AddScoped<IUserManager, UserManager>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateCarDtoValidator>();
+builder.Services.AddScoped<FluentValidationFilter>();
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtIssuer = jwtSection["Issuer"] ?? "CarRental.Api";
@@ -81,13 +91,16 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<CarRentalDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<FluentValidationFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
                      ?? Array.Empty<string>();
@@ -126,8 +139,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseStaticFiles();
-
-
 
 app.MapControllers();
 

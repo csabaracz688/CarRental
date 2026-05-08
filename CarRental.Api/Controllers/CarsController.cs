@@ -2,10 +2,10 @@ using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
 using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
 
 namespace CarRental.WebApi.Controllers;
 
@@ -15,16 +15,25 @@ public class CarsController : ControllerBase
 {
     private readonly ICarManager _cars;
     private readonly CarRentalDbContext _db;
+    private readonly IValidator<CreateCarDto> _createCarValidator;
+    private readonly IValidator<UpdateCarDto> _updateCarValidator;
 
-    public CarsController(ICarManager cars, CarRentalDbContext db)
+    public CarsController(
+        ICarManager cars,
+        CarRentalDbContext db,
+        IValidator<CreateCarDto> createCarValidator,
+        IValidator<UpdateCarDto> updateCarValidator)
     {
         _cars = cars;
         _db = db;
+        _createCarValidator = createCarValidator;
+        _updateCarValidator = updateCarValidator;
     }
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAll() => Ok(await _cars.GetAllAsync());
+    public async Task<IActionResult> GetAll()
+        => Ok(await _cars.GetAllAsync());
 
     [HttpGet("{id:int}")]
     [AllowAnonymous]
@@ -38,16 +47,52 @@ public class CarsController : ControllerBase
     [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Create([FromForm] CreateCarDto dto)
     {
+        var validationResult = await _createCarValidator.ValidateAsync(dto);
 
-        var created = await _cars.CreateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors.Select(error => new
+            {
+                field = error.PropertyName,
+                message = error.ErrorMessage
+            }));
+        }
 
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        try
+        {
+            var created = await _cars.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Update(int id, [FromForm] UpdateCarDto dto)
-        => await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+    {
+        var validationResult = await _updateCarValidator.ValidateAsync(dto);
+
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors.Select(error => new
+            {
+                field = error.PropertyName,
+                message = error.ErrorMessage
+            }));
+        }
+
+        try
+        {
+            return await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 
     [HttpDelete("{id:int}")]
     [Authorize(Roles = nameof(RoleTypes.Admin))]
@@ -61,18 +106,17 @@ public class CarsController : ControllerBase
         {
             return Conflict(new
             {
-                message = "Az autóhoz tartozikaktív vagy korábbi bérlés, ezért nem törölhetõ."
+                message = "Az autóhoz tartozik aktív vagy korábbi bérlés, ezért nem törölhetõ."
             });
         }
     }
 
-    // GET: api/cars/{id}/availability?start=2026-03-11&end=2026-03-14
     [HttpGet("{id:int}/availability")]
     [AllowAnonymous]
     public async Task<IActionResult> Availability(
-      int id,
-      [FromQuery] DateTime start,
-      [FromQuery] DateTime end)
+        int id,
+        [FromQuery] DateTime start,
+        [FromQuery] DateTime end)
     {
         var car = await _db.Cars
             .AsNoTracking()
@@ -134,17 +178,19 @@ public class CarsController : ControllerBase
             {
                 startDate = r.StartDate,
                 endDate = r.EndDate,
-                status = (int)r.Status
+                status = r.Status
             })
             .ToListAsync();
 
         return Ok(rentals);
     }
+
     [HttpGet("search")]
+    [AllowAnonymous]
     public async Task<IActionResult> Search(
-    [FromQuery] DateTime start,
-    [FromQuery] DateTime end,
-    CancellationToken cancellationToken)
+        [FromQuery] DateTime start,
+        [FromQuery] DateTime end,
+        CancellationToken cancellationToken)
     {
         if (end <= start)
         {
