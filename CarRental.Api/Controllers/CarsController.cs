@@ -2,7 +2,6 @@ using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
 using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,19 +14,11 @@ public class CarsController : ControllerBase
 {
     private readonly ICarManager _cars;
     private readonly CarRentalDbContext _db;
-    private readonly IValidator<CreateCarDto> _createCarValidator;
-    private readonly IValidator<UpdateCarDto> _updateCarValidator;
 
-    public CarsController(
-        ICarManager cars,
-        CarRentalDbContext db,
-        IValidator<CreateCarDto> createCarValidator,
-        IValidator<UpdateCarDto> updateCarValidator)
+    public CarsController(ICarManager cars, CarRentalDbContext db)
     {
         _cars = cars;
         _db = db;
-        _createCarValidator = createCarValidator;
-        _updateCarValidator = updateCarValidator;
     }
 
     [HttpGet]
@@ -47,17 +38,6 @@ public class CarsController : ControllerBase
     [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Create([FromForm] CreateCarDto dto)
     {
-        var validationResult = await _createCarValidator.ValidateAsync(dto);
-
-        if (!validationResult.IsValid)
-        {
-            return BadRequest(validationResult.Errors.Select(error => new
-            {
-                field = error.PropertyName,
-                message = error.ErrorMessage
-            }));
-        }
-
         try
         {
             var created = await _cars.CreateAsync(dto);
@@ -73,17 +53,6 @@ public class CarsController : ControllerBase
     [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Update(int id, [FromForm] UpdateCarDto dto)
     {
-        var validationResult = await _updateCarValidator.ValidateAsync(dto);
-
-        if (!validationResult.IsValid)
-        {
-            return BadRequest(validationResult.Errors.Select(error => new
-            {
-                field = error.PropertyName,
-                message = error.ErrorMessage
-            }));
-        }
-
         try
         {
             return await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
