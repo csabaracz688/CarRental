@@ -19,14 +19,10 @@ public class CarManager : ICarManager
         CarRentStatus.Handed
     };
 
-    /*private static string? BuildImageUrl(string? imagePath)
+    private static string? BuildImageUrl(string? imagePath)
         => imagePath != null
             ? $"https://localhost:7077/uploads/{imagePath}"
-            : null;*/
-    private static string? BuildImageUrl(string? imagePath)
-    => imagePath != null
-        ? $"/uploads/{imagePath}"
-        : null;
+            : null;
 
     public async Task<List<CarResponseDto>> GetAllAsync(CancellationToken ct = default)
         => await _db.Cars.AsNoTracking()
@@ -78,7 +74,7 @@ public class CarManager : ICarManager
 
         if (dto.Image != null)
         {
-            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
 
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
@@ -154,10 +150,18 @@ public class CarManager : ICarManager
 
         if (dto.Image != null)
         {
-            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
 
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
+
+            if (!string.IsNullOrWhiteSpace(car.ImagePath))
+            {
+                var oldPath = Path.Combine(folder, car.ImagePath);
+
+                if (File.Exists(oldPath))
+                    File.Delete(oldPath);
+            }
 
             var fileName = Guid.NewGuid() + Path.GetExtension(dto.Image.FileName);
             var path = Path.Combine(folder, fileName);
@@ -167,8 +171,7 @@ public class CarManager : ICarManager
 
             car.ImagePath = fileName;
         }
-
-        await _db.SaveChangesAsync(ct);
+            await _db.SaveChangesAsync(ct); 
         return true;
     }
 
@@ -177,17 +180,25 @@ public class CarManager : ICarManager
         var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == id, ct);
         if (car is null) return false;
 
-        // kép törlése
+        var hasAnyRental = await _db.Rentals.AnyAsync(r => r.CarId == id, ct);
+
+        if (hasAnyRental)
+            throw new InvalidOperationException("CAR_HAS_RENTALS");
+
         if (!string.IsNullOrEmpty(car.ImagePath))
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", car.ImagePath);
+            var path = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot/uploads",
+                car.ImagePath
+            );
+
             if (File.Exists(path))
                 File.Delete(path);
         }
 
         _db.Cars.Remove(car);
         await _db.SaveChangesAsync(ct);
-
         return true;
     }
 

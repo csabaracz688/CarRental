@@ -1,6 +1,5 @@
 using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
-using CarRental.Domain.Constants;
 using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -36,38 +35,36 @@ public class CarsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = RoleConstants.Admin)]
+    [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Create([FromForm] CreateCarDto dto)
     {
-        try
-        {
-            var created = await _cars.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message, details = ex.InnerException?.Message });
-        }
+
+        var created = await _cars.CreateAsync(dto);
+
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = RoleConstants.Admin)]
+    [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Update(int id, [FromForm] UpdateCarDto dto)
+        => await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = nameof(RoleTypes.Admin))]
+    public async Task<IActionResult> Delete(int id)
     {
         try
         {
-            return await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+            return await _cars.DeleteAsync(id) ? NoContent() : NotFound();
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex) when (ex.Message == "CAR_HAS_RENTALS")
         {
-            return BadRequest(new { message = ex.Message, details = ex.InnerException?.Message });
+            return Conflict(new
+            {
+                message = "Az autóhoz tartozikaktív vagy korábbi bérlés, ezért nem törölhetõ."
+            });
         }
     }
-
-    [HttpDelete("{id:int}")]
-    [Authorize(Roles = RoleConstants.Admin)]
-    public async Task<IActionResult> Delete(int id)
-        => await _cars.DeleteAsync(id) ? NoContent() : NotFound();
 
     // GET: api/cars/{id}/availability?start=2026-03-11&end=2026-03-14
     [HttpGet("{id:int}/availability")]
@@ -144,7 +141,6 @@ public class CarsController : ControllerBase
         return Ok(rentals);
     }
     [HttpGet("search")]
-    [AllowAnonymous]
     public async Task<IActionResult> Search(
     [FromQuery] DateTime start,
     [FromQuery] DateTime end,
@@ -164,5 +160,24 @@ public class CarsController : ControllerBase
             cancellationToken);
 
         return Ok(result);
+    }
+
+    [HttpPatch("{id:int}/deactivate")]
+    [Authorize(Roles = nameof(RoleTypes.Admin))]
+    public async Task<IActionResult> Deactivate(int id)
+    {
+        var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (car is null)
+            return NotFound();
+
+        car.Status = CarStatus.Unavailable;
+        car.UnavailableFrom = DateTime.UtcNow;
+        car.UnavailableReason = CarUnavailableReason.AdminHold;
+        car.UnavailableNote = "Admin által inaktiválva.";
+
+        await _db.SaveChangesAsync();
+
+        return NoContent();
     }
 }

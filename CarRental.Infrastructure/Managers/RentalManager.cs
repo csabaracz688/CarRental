@@ -1,5 +1,4 @@
-using CarRental.Application.Common.Exceptions;
-using CarRental.Application.Common.Interfaces;
+﻿using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Features;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
@@ -11,142 +10,154 @@ namespace CarRental.Infrastructure.Managers;
 public class RentalManager : IRentalManager
 {
     private readonly CarRentalDbContext _db;
+    private readonly IEmailService _emailService;
 
-    public RentalManager(CarRentalDbContext db)
+    public RentalManager(CarRentalDbContext db, IEmailService emailService)
     {
         _db = db;
+        _emailService = emailService;
+    }
+
+    private static IQueryable<RentalListDto> MapToRentalListDto(IQueryable<Rental> query)
+    {
+        return query.Select(r => new RentalListDto
+        {
+            Id = r.Id,
+
+            CarId = r.CarId,
+            LicensePlate = r.Car.LicensePlate,
+            CarBrand = r.Car.Brand,
+            CarModel = r.Car.Model,
+            DailyPrice = r.Car.DailyPrice,
+            ImageUrl = r.Car.ImagePath != null
+                ? $"https://localhost:7077/uploads/{r.Car.ImagePath}"
+                : null,
+
+            UserId = r.UserId,
+            UserName = r.User != null ? r.User.UserName : null,
+            UserEmail = r.User != null ? r.User.Email : null,
+
+            GuestName = r.GuestName,
+            GuestEmail = r.GuestEmail,
+            GuestPhone = r.GuestPhone,
+
+            CustomerName = r.User != null ? r.User.UserName : r.GuestName,
+            CustomerEmail = r.User != null ? r.User.Email : r.GuestEmail,
+
+            StartDate = r.StartDate,
+            EndDate = r.EndDate,
+
+            Status = r.Status,
+            StatusText = r.Status.ToString(),
+
+            ApprovedByUserId = r.ApprovedByUserId,
+            ApprovedByUserName = r.ApprovedByUser != null
+                ? r.ApprovedByUser.UserName
+                : null,
+
+            HandedOverAt = r.HandedOverAt,
+            ClosedAt = r.ClosedAt
+        });
     }
 
     public async Task<List<RentalListDto>> GetAllAsync(CancellationToken ct = default)
     {
-        return await _db.Rentals
-            .AsNoTracking()
+        return await MapToRentalListDto(_db.Rentals.AsNoTracking())
             .OrderByDescending(r => r.Id)
-            .Select(r => new RentalListDto
-            {
-                Id = r.Id,
-
-                CarId = r.CarId,
-                LicensePlate = r.Car.LicensePlate,
-                CarBrand = r.Car.Brand,
-                CarModel = r.Car.Model,
-
-                UserId = r.UserId,
-                UserName = r.User != null ? r.User.UserName : null,
-
-                GuestName = r.GuestName,
-                GuestEmail = r.GuestEmail,
-                GuestPhone = r.GuestPhone,
-
-                StartDate = r.StartDate,
-                EndDate = r.EndDate,
-
-                Status = r.Status,
-
-                ApprovedByUserId = r.ApprovedByUserId,
-                ApprovedByUserName = r.ApprovedByUser != null ? r.ApprovedByUser.UserName : null,
-
-                HandedOverAt = r.HandedOverAt,
-                ClosedAt = r.ClosedAt
-            })
             .ToListAsync(ct);
     }
 
     public async Task<List<RentalListDto>> GetPendingAsync(CancellationToken ct = default)
     {
-        return await _db.Rentals
-            .AsNoTracking()
-            .Where(r => r.Status == CarRentStatus.Requested)
+        return await MapToRentalListDto(
+                _db.Rentals
+                    .AsNoTracking()
+                    .Where(r => r.Status == CarRentStatus.Requested)
+            )
             .OrderByDescending(r => r.Id)
-            .Select(r => new RentalListDto
-            {
-                Id = r.Id,
+            .ToListAsync(ct);
+    }
 
-                CarId = r.CarId,
-                LicensePlate = r.Car.LicensePlate,
-                CarBrand = r.Car.Brand,
-                CarModel = r.Car.Model,
-
-                UserId = r.UserId,
-                UserName = r.User != null ? r.User.UserName : null,
-
-                GuestName = r.GuestName,
-                GuestEmail = r.GuestEmail,
-                GuestPhone = r.GuestPhone,
-
-                StartDate = r.StartDate,
-                EndDate = r.EndDate,
-
-                Status = r.Status,
-
-                ApprovedByUserId = r.ApprovedByUserId,
-                ApprovedByUserName = r.ApprovedByUser != null ? r.ApprovedByUser.UserName : null,
-
-                HandedOverAt = r.HandedOverAt,
-                ClosedAt = r.ClosedAt
-            })
+    public async Task<List<RentalListDto>> GetByUserIdAsync(
+        int userId,
+        CancellationToken ct = default)
+    {
+        return await MapToRentalListDto(
+                _db.Rentals
+                    .AsNoTracking()
+                    .Where(r => r.UserId == userId)
+            )
+            .OrderByDescending(r => r.Id)
             .ToListAsync(ct);
     }
 
     public async Task<Rental> RequestAsync(RequestRentalDto dto, CancellationToken ct = default)
     {
-        // 1) Car lekérés (nem csak AnyAsync), mert kell az Unavailable info
-        var car = await _db.Cars.AsNoTracking()
+        var car = await _db.Cars
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == dto.CarId, ct);
 
         if (car is null)
-            throw new ArgumentException("Invalid CarId");
+            throw new ArgumentException("Invalid CarId.");
+
+        if (car.Status != CarStatus.Available)
+            throw new ArgumentException("Car is not available for rental.");
+
         if (dto.StartDate >= dto.EndDate)
             throw new ArgumentException("StartDate must be before EndDate.");
 
-        // 2) Nem elérhető időszak ellenőrzése (szerviz/törött/admin hold stb.)
         if (car.UnavailableFrom.HasValue && car.UnavailableTo.HasValue)
         {
-            var overlaps =
+            var unavailableOverlap =
                 dto.StartDate < car.UnavailableTo.Value &&
                 dto.EndDate > car.UnavailableFrom.Value;
 
-            if (overlaps)
+            if (unavailableOverlap)
             {
                 var reason = car.UnavailableReason?.ToString() ?? "Unavailable";
-                var note = string.IsNullOrWhiteSpace(car.UnavailableNote) ? "" : $" Note: {car.UnavailableNote}";
+                var note = string.IsNullOrWhiteSpace(car.UnavailableNote)
+                    ? ""
+                    : $" Note: {car.UnavailableNote}";
+
                 throw new ArgumentException(
                     $"Car is unavailable due to {reason} from {car.UnavailableFrom:yyyy-MM-dd} to {car.UnavailableTo:yyyy-MM-dd}.{note}"
                 );
             }
         }
 
-        // 2.5) Már meglévő foglalások ellenőrzése
-        var rentalOverlaps = await _db.Rentals.AnyAsync(r =>
+        var rentalOverlap = await _db.Rentals.AnyAsync(r =>
             r.CarId == dto.CarId &&
             r.Status != CarRentStatus.Rejected &&
             r.Status != CarRentStatus.Returned &&
-
             dto.StartDate < r.EndDate &&
-            dto.EndDate > r.StartDate
-        , ct);
+            dto.EndDate > r.StartDate,
+            ct
+        );
 
-        if (rentalOverlaps)
-        {
+        if (rentalOverlap)
             throw new ArgumentException("Car is already booked for the selected period.");
-        }
 
-        // 3) Guest / user ellenőrzés (ahogy nálad volt)
         var isGuest = dto.UserId is null;
+
         if (isGuest)
         {
             if (string.IsNullOrWhiteSpace(dto.GuestName) ||
                 string.IsNullOrWhiteSpace(dto.GuestEmail) ||
                 string.IsNullOrWhiteSpace(dto.GuestPhone))
-                throw new ArgumentException("GuestName, GuestEmail and GuestPhone are required for guest rentals.");
+            {
+                throw new ArgumentException(
+                    "GuestName, GuestEmail and GuestPhone are required for guest rentals."
+                );
+            }
         }
         else
         {
             var userExists = await _db.Users.AnyAsync(u => u.Id == dto.UserId, ct);
-            if (!userExists) throw new ArgumentException("Invalid UserId.");
+
+            if (!userExists)
+                throw new ArgumentException("Invalid UserId.");
         }
 
-        // 4) Rental létrehozás
         var rental = new Rental
         {
             CarId = dto.CarId,
@@ -161,10 +172,14 @@ public class RentalManager : IRentalManager
 
         _db.Rentals.Add(rental);
         await _db.SaveChangesAsync(ct);
+
         return rental;
     }
 
-    public async Task<bool> ApproveAsync(int rentalId, int approvedByUserId, CancellationToken ct = default)
+    public async Task<bool> ApproveAsync(
+        int rentalId,
+        int approvedByUserId,
+        CancellationToken ct = default)
     {
         var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
         if (rental is null) return false;
@@ -183,7 +198,10 @@ public class RentalManager : IRentalManager
         return true;
     }
 
-    public async Task<bool> RejectAsync(int rentalId, int approvedByUserId, CancellationToken ct = default)
+    public async Task<bool> RejectAsync(
+        int rentalId,
+        int approvedByUserId,
+        CancellationToken ct = default)
     {
         var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
         if (rental is null) return false;
@@ -202,16 +220,26 @@ public class RentalManager : IRentalManager
         return true;
     }
 
-    public async Task<bool> HandoverAsync(int rentalId, CancellationToken ct = default)
+    public async Task<bool> HandOverAsync(
+        int rentalId,
+        DateTime handedOverAt,
+        CancellationToken ct = default)
     {
-        var rental = await _db.Rentals.FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+        var rental = await _db.Rentals
+            .Include(r => r.Car)
+            .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+
         if (rental is null) return false;
 
         if (rental.Status != CarRentStatus.Approved)
             throw new ArgumentException("Only approved rentals can be handed over.");
 
-        rental.Status = CarRentStatus.Handed;
-        rental.HandedOverAt = DateTime.UtcNow;
+        rental.HandedOverAt = handedOverAt;
+
+        if (rental.Car != null)
+        {
+            rental.Car.Status = CarStatus.Rented;
+        }
 
         await _db.SaveChangesAsync(ct);
         return true;
@@ -219,43 +247,15 @@ public class RentalManager : IRentalManager
 
     public async Task<bool> CloseAsync(int rentalId, CancellationToken ct = default)
     {
-        try
-        {
-            await ReturnRentalAsync(rentalId, ct);
-            return true;
-        }
-        catch (NotFoundException)
-        {
-            return false;
-        }
-        catch (ConflictException)
-        {
-            return false;
-        }
-    }
-
-
-
-    public async Task ReturnRentalAsync(int rentalId, CancellationToken ct = default)
-    {
         var rental = await _db.Rentals
             .Include(r => r.Car)
+            .Include(r => r.User)
             .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
 
-        if (rental == null)
-            throw new NotFoundException($"Rental not found. rentalId: {rentalId}");
+        if (rental is null) return false;
 
         if (rental.Status == CarRentStatus.Returned)
-        {
-            return;
-        }
-
-        if (rental.Status != CarRentStatus.Handed)
-        {
-            throw new ConflictException(
-                $"Rental cannot be returned. Current status: {rental.Status}");
-        }
-
+            throw new ArgumentException("Rental is already closed.");
 
         rental.Status = CarRentStatus.Returned;
         rental.ClosedAt = DateTime.UtcNow;
@@ -265,8 +265,12 @@ public class RentalManager : IRentalManager
             var hasActiveRentals = await _db.Rentals.AnyAsync(r =>
                 r.CarId == rental.CarId &&
                 r.Id != rental.Id &&
-                (r.Status == CarRentStatus.Approved ||
-                 r.Status == CarRentStatus.Handed), ct);
+                (
+                    r.Status == CarRentStatus.Approved ||
+                    r.Status == CarRentStatus.Handed
+                ),
+                ct
+            );
 
             if (!hasActiveRentals && rental.Car.Status == CarStatus.Rented)
             {
@@ -274,14 +278,103 @@ public class RentalManager : IRentalManager
             }
         }
 
+        var days = (rental.EndDate.Date - rental.StartDate.Date).Days;
+        if (days <= 0) days = 1;
+
+        var dailyPrice = rental.Car.DailyPrice;
+        var totalPrice = days * dailyPrice;
+
+        var customerEmail = rental.User != null
+            ? rental.User.Email
+            : rental.GuestEmail;
+
+        var customerName = rental.User != null
+            ? rental.User.UserName
+            : rental.GuestName;
+
+        if (string.IsNullOrWhiteSpace(customerEmail))
+            throw new ArgumentException("Customer email is missing.");
+
+        var emailBody = $@"
+            <h2>CarRental Invoice</h2>
+
+            <p>Dear {customerName},</p>
+            <p>Your rental has been closed.</p>
+
+            <h3>Car details</h3>
+            <p><strong>Brand:</strong> {rental.Car.Brand}</p>
+            <p><strong>Model:</strong> {rental.Car.Model}</p>
+            <p><strong>License plate:</strong> {rental.Car.LicensePlate}</p>
+
+            <h3>Rental details</h3>
+            <p><strong>Start date:</strong> {rental.StartDate:yyyy-MM-dd}</p>
+            <p><strong>End date:</strong> {rental.EndDate:yyyy-MM-dd}</p>
+            <p><strong>Rental days:</strong> {days}</p>
+
+            <h3>Payment</h3>
+            <p><strong>Daily price:</strong> {dailyPrice} Ft</p>
+            <p><strong>Total price:</strong> {totalPrice} Ft</p>
+
+            <p>Thank you for using CarRental!</p>
+        ";
+
+        await _emailService.SendEmailAsync(
+            customerEmail,
+            "CarRental invoice",
+            emailBody
+        );
+
         await _db.SaveChangesAsync(ct);
+        return true;
     }
 
-    public Task<List<Rental>> GetByUserIdAsync(int userId, CancellationToken ct = default) =>
-        _db.Rentals
-            .AsNoTracking()
+    public async Task<string?> GetInvoiceHtmlAsync(int rentalId, CancellationToken ct = default)
+    {
+        var rental = await _db.Rentals
             .Include(r => r.Car)
-            .Where(r => r.UserId == userId)
-            .OrderByDescending(r => r.Id)
-            .ToListAsync(ct);
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+
+        if (rental is null) return null;
+
+        var days = (rental.EndDate.Date - rental.StartDate.Date).Days;
+        if (days <= 0) days = 1;
+
+        var dailyPrice = rental.Car.DailyPrice;
+        var totalPrice = days * dailyPrice;
+
+        var customerName = rental.User != null
+            ? rental.User.UserName
+            : rental.GuestName;
+
+        var customerEmail = rental.User != null
+            ? rental.User.Email
+            : rental.GuestEmail;
+
+        return $@"
+        <html>
+        <body style='font-family: Arial; padding: 30px;'>
+            <h1>CarRental Invoice</h1>
+
+            <h3>Customer</h3>
+            <p><strong>Name:</strong> {customerName}</p>
+            <p><strong>Email:</strong> {customerEmail}</p>
+
+            <h3>Car details</h3>
+            <p><strong>Brand:</strong> {rental.Car.Brand}</p>
+            <p><strong>Model:</strong> {rental.Car.Model}</p>
+            <p><strong>License plate:</strong> {rental.Car.LicensePlate}</p>
+
+            <h3>Rental details</h3>
+            <p><strong>Start date:</strong> {rental.StartDate:yyyy-MM-dd}</p>
+            <p><strong>End date:</strong> {rental.EndDate:yyyy-MM-dd}</p>
+            <p><strong>Days:</strong> {days}</p>
+
+            <h3>Payment</h3>
+            <p><strong>Daily price:</strong> {dailyPrice} Ft</p>
+            <p><strong>Total price:</strong> {totalPrice} Ft</p>
+        </body>
+        </html>
+    ";
+    }
 }

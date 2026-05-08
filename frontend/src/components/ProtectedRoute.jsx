@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children, role }) {
 
   if (!token || !userRole || isTokenExpired(token)) {
     clearSession();
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/" state={{ from: location.pathname }} replace />;
   }
 
   if (role && userRole !== role) {

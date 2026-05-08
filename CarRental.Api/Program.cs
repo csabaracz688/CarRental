@@ -1,8 +1,10 @@
+using CarRental.Application.Common.Interfaces;
 using CarRental.Application.Users;
 using CarRental.Infrastructure;
 using CarRental.Infrastructure.Managers;
 using CarRental.Infrastructure.Persistence;
 using CarRental.Infrastructure.Persistence.Seeding;
+using CarRental.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +12,7 @@ using Microsoft.OpenApi;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +41,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddInfrastructure();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddScoped<IUserManager, UserManager>();
 
@@ -122,6 +126,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseStaticFiles();
+
+
 
 app.MapControllers();
 

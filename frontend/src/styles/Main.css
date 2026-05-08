@@ -145,3 +145,32 @@
   font-size: 14px;
   color: gray;
 }
+
+.filters {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0 30px;
+  flex-wrap: wrap;
+}
+
+.filters select,
+.clear-filters-btn {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.clear-filters-btn {
+  background: #222;
+  color: white;
+  cursor: pointer;
+}
+
+.clear-filters-btn:hover {
+  background: #000;
+}
+
+.car-card {
+  cursor: pointer;
+}

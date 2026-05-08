@@ -14,7 +14,7 @@ const payload = JSON.parse(atob(token.split('.')[1]));
 console.log(payload);
 const navigate = useNavigate();
 
-  // 👉 userId a tokenből
+  //  userId a tokenből
   const getUserIdFromToken = () => {
     if (!token) return null;
 

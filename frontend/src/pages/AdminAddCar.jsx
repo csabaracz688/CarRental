@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function AdminAddCar() {
   const [car, setCar] = useState({
@@ -15,6 +16,7 @@ function AdminAddCar() {
     image: null,
   });
 
+  const navigate = useNavigate();
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -72,26 +74,31 @@ function AdminAddCar() {
 
   return (
     <div>
-      <h1>Autó hozzáadása</h1>
+
+      <button className="back-btn" onClick={() => navigate("/admin")}>
+        ← Back
+      </button>
+
+      <h1>Add car</h1>
 
       <form onSubmit={handleSubmit}>
         <input
           name="licensePlate"
-          placeholder="Rendszám"
+          placeholder="License plate"
           onChange={handleChange}
         />
         <br />
 
-        <input name="brand" placeholder="Márka" onChange={handleChange} />
+        <input name="brand" placeholder="Brand" onChange={handleChange} />
         <br />
 
-        <input name="model" placeholder="Modell" onChange={handleChange} />
+        <input name="model" placeholder="Model" onChange={handleChange} />
         <br />
 
         <input
           type="number"
           name="distanceKm"
-          placeholder="Futott km"
+          placeholder="Distance (km)"
           onChange={handleChange}
         />
         <br />
@@ -99,7 +106,7 @@ function AdminAddCar() {
         <input
           type="number"
           name="dailyPrice"
-          placeholder="Ár / nap"
+          placeholder="Daily price  (USD)"
           onChange={handleChange}
         />
         <br />

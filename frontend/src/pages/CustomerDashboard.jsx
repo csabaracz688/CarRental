@@ -8,7 +8,7 @@ export default function CustomerDashboard() {
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
     localStorage.removeItem("userName");
-    navigate("/login");
+    navigate("/");
   };
 
   return (
