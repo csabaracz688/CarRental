@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/CarDetails.css";
+import { useToast } from "../components/Toaster";
 
 export default function CarDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const toast = useToast();
 
   const [car, setCar] = useState(null);
   const [start, setStart] = useState("");
@@ -26,12 +28,12 @@ export default function CarDetails() {
 
   const checkAvailability = async () => {
     if (!start || !end) {
-      alert("Please select dates!");
+      toast("Please select dates!", { type: "warning" });
       return false;
     }
 
     if (start >= end) {
-      alert("End date must be after start date!");
+      toast("End date must be after start date!", { type: "warning" });
       return false;
     }
 
@@ -52,12 +54,12 @@ export default function CarDetails() {
       const isAvailable = await checkAvailability();
 
       if (!isAvailable) {
-        alert("Not available!");
+        toast("Not available!", { type: "error" });
         return;
       }
 
       if (!token && (!guestName || !guestEmail || !guestPhone)) {
-        alert("Please fill all guest fields!");
+        toast("Please fill all guest fields!", { type: "warning" });
         return;
       }
 
@@ -84,15 +86,15 @@ export default function CarDetails() {
 
       if (!res.ok) {
         const error = await res.json().catch(() => null);
-        alert(error?.message || "Booking failed!");
+        toast(error?.message || "Booking failed!", { type: "error" });
         return;
       }
 
-      alert("Booking request sent!");
+      toast("Booking request sent!", { type: "success" });
       navigate("/");
     } catch (err) {
       console.error("Booking error:", err);
-      alert("Something went wrong!");
+      toast("Something went wrong!", { type: "error" });
     } finally {
       setLoading(false);
     }
