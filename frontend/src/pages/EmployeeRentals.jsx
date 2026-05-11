@@ -97,23 +97,23 @@ export default function EmployeeRentals() {
   };
 
   const closeRental = async (id) => {
-    const res = await fetch(`https://localhost:7077/api/rentals/${id}/close`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const res = await fetch(`https://localhost:7077/api/rentals/${id}/close`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Close error:", res.status, text);
-      alert("Close failed!");
-      return;
-    }
+  if (!res.ok) {
+    const error = await res.json().catch(() => null);
 
-    alert("Rental closed!");
-    loadRentals();
-  };
+    alert(error?.message || "A kölcsönzés lezárása sikertelen!");
+    return;
+  }
+
+  alert("Kölcsönzés lezárva!");
+  loadRentals();
+};
 
 const openInvoice = async (id) => {
   const res = await fetch(`https://localhost:7077/api/rentals/${id}/invoice`, {
