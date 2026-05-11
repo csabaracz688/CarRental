@@ -55,6 +55,10 @@ export default function MainPage() {
     });
   }, [availableCars, searchTerm, brandFilter, modelFilter]);
 
+  const featuredCar = useMemo(() => {
+    return availableCars.length > 0 ? availableCars[0] : null;
+  }, [availableCars]);
+
   return (
     <div className="main-container">
       <nav className="navbar">
@@ -85,7 +89,7 @@ export default function MainPage() {
                   </Link>
 
                   <Link to="/profile" className="profile-icon">
-                    👤
+                    Profile
                   </Link>
                 </>
               )}
@@ -99,17 +103,40 @@ export default function MainPage() {
       </nav>
 
       <section className="hero">
-        <h2>Rent Cars Easily</h2>
-        <p>
-          Welcome to our car rental platform. Search and filter available cars.
-        </p>
+        <div className="hero-inner">
+          <div className="hero-left">
+            <h2>Find your perfect ride</h2>
+            <p>
+              Fast, reliable car rentals with transparent pricing. Browse our
+              available fleet and book in minutes.
+            </p>
 
-        {!token && (
-          <div className="hero-buttons">
-            <Link to="/login" className="hero-login">Go to Login</Link>
-            <Link to="/register" className="hero-register">Create Account</Link>
+            <div className="hero-ctas">
+              <Link to="/" className="btn btn-primary" aria-label="Browse cars">
+                Browse cars
+              </Link>
+
+              {!token && (
+                <Link to="/register" className="btn btn-ghost" aria-label="Create account">
+                  Create account
+                </Link>
+              )}
+            </div>
           </div>
-        )}
+
+          <div className="hero-right">
+            {featuredCar ? (
+              <div className="hero-featured" onClick={() => navigate(`/cars/${featuredCar.id}`)}>
+                <img src={featuredCar.imageUrl || "https://via.placeholder.com/640x360"} alt={`${featuredCar.brand} ${featuredCar.model}`} />
+                <div className="featured-badge">{featuredCar.brand} {featuredCar.model}</div>
+              </div>
+            ) : (
+              <div className="hero-featured placeholder">
+                <p>No featured car</p>
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="cars-section">
