@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../styles/EmployeeRentals.css";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../components/Toaster";
 
 export default function EmployeeRentals() {
   const [rentals, setRentals] = useState([]);
@@ -8,6 +9,7 @@ export default function EmployeeRentals() {
   const [statusFilter, setStatusFilter] = useState("");
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
+  const toast = useToast();
 
   const loadRentals = async () => {
     try {
@@ -43,7 +45,7 @@ export default function EmployeeRentals() {
     });
 
     if (!res.ok) {
-      alert("Approve failed!");
+      toast("Approve failed!", { type: "error" });
       return;
     }
 
@@ -59,7 +61,7 @@ export default function EmployeeRentals() {
     });
 
     if (!res.ok) {
-      alert("Reject failed!");
+      toast("Reject failed!", { type: "error" });
       return;
     }
 
@@ -70,7 +72,7 @@ export default function EmployeeRentals() {
     const rawDate = handoverDates[String(id)];
 
     if (!rawDate) {
-      alert("Add meg az átadás dátumát!");
+      toast("Please provide handover date/time!", { type: "warning" });
       return;
     }
 
@@ -88,11 +90,11 @@ export default function EmployeeRentals() {
     if (!res.ok) {
       const text = await res.text();
       console.error("Handover error:", res.status, text);
-      alert("Átadás sikertelen!");
+      toast("Handover failed!", { type: "error" });
       return;
     }
 
-    alert("Átadás rögzítve!");
+    toast("Handover recorded!", { type: "success" });
     loadRentals();
   };
 
@@ -107,11 +109,11 @@ export default function EmployeeRentals() {
     if (!res.ok) {
       const text = await res.text();
       console.error("Close error:", res.status, text);
-      alert("Close failed!");
+      toast("Close failed!", { type: "error" });
       return;
     }
 
-    alert("Rental closed!");
+    toast("Rental closed!", { type: "success" });
     loadRentals();
   };
 
@@ -125,7 +127,7 @@ const openInvoice = async (id) => {
   if (!res.ok) {
     const text = await res.text();
     console.error("Invoice error:", res.status, text);
-    alert("Számla megnyitása sikertelen!");
+    toast("Unable to open invoice!", { type: "error" });
     return;
   }
 
@@ -151,15 +153,15 @@ const filteredRentals = rentals.filter((rental) => {
         ← Back
       </button>
 
-      <h1>Bérlések</h1>
-      <p>Aktív és korábbi bérlések áttekintése.</p>
+      <h1>Rentals</h1>
+      <p>Review active and historical rentals.</p>
 
       <div className="rental-filters">
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="">Összes státusz</option>
+          <option value="">All statuses</option>
           <option value="Requested">Requested</option>
           <option value="Approved">Approved</option>
           <option value="Returned">Returned</option>
@@ -182,15 +184,15 @@ const filteredRentals = rentals.filter((rental) => {
               </h2>
 
               <p>
-                <strong>Rendszám:</strong> {rental.licensePlate}
+                <strong>License plate:</strong> {rental.licensePlate}
               </p>
 
               <p>
-                <strong>Bérlő:</strong>{" "}
+                <strong>Renter:</strong>{" "}
                 {rental.customerName ||
                   rental.userName ||
                   rental.guestName ||
-                  "Ismeretlen"}
+                  "Unknown"}
               </p>
 
               <p>
@@ -202,27 +204,27 @@ const filteredRentals = rentals.filter((rental) => {
               </p>
 
               <p>
-                <strong>Időszak:</strong>{" "}
+                <strong>Period:</strong>{" "}
                 {new Date(rental.startDate).toLocaleDateString()} -{" "}
                 {new Date(rental.endDate).toLocaleDateString()}
               </p>
 
               <p>
-                <strong>Státusz:</strong> {rental.statusText || rental.status}
+                <strong>Status:</strong> {rental.statusText || rental.status}
               </p>
 
               <p>
-                <strong>Átadás:</strong>{" "}
+                <strong>Handover:</strong>{" "}
                 {rental.handedOverAt
                   ? new Date(rental.handedOverAt).toLocaleString()
-                  : "Még nincs átadva"}
+                  : "Not handed over yet"}
               </p>
 
               <p>
-                <strong>Visszahozás / lezárás:</strong>{" "}
+                <strong>Return / close:</strong>{" "}
                 {rental.closedAt
                   ? new Date(rental.closedAt).toLocaleString()
-                  : "Még nincs lezárva"}
+                  : "Not closed yet"}
               </p>
 
               {(rental.statusText === "Requested" ||
@@ -264,7 +266,7 @@ const filteredRentals = rentals.filter((rental) => {
                       className="handover-btn"
                       onClick={() => handOverRental(rental.id)}
                     >
-                      Átadás rögzítése
+                      Record handover
                     </button>
                   </div>
                 )}
@@ -274,7 +276,7 @@ const filteredRentals = rentals.filter((rental) => {
                   className="close-btn"
                   onClick={() => closeRental(rental.id)}
                 >
-                  Kölcsönzés lezárása
+                  Close rental
                 </button>
               )}
 
@@ -284,7 +286,7 @@ const filteredRentals = rentals.filter((rental) => {
                   className="invoice-btn"
                   onClick={() => openInvoice(rental.id)}
                 >
-                  Számla megtekintése
+                  View invoice
                 </button>
               )}
             </div>
