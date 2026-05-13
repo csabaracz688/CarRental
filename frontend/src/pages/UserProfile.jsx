@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/UserProfile.css";
+import { useToast } from "../components/useToast";
 
 export default function Profile() {
   const [user, setUser] = useState({
@@ -10,9 +12,8 @@ export default function Profile() {
   });
 
   const token = localStorage.getItem("token");
-const payload = JSON.parse(atob(token.split('.')[1]));
-console.log(payload);
-const navigate = useNavigate();
+  const navigate = useNavigate();
+  const toast = useToast();
 
   //  userId a tokenből
   const getUserIdFromToken = () => {
@@ -90,23 +91,27 @@ const navigate = useNavigate();
         throw new Error(`Error: ${res.status} - ${text}`);
       }
 
-      alert("Profile updated!");
+      toast("Profile updated!", { type: "success" });
     } catch (err) {
       console.error("Update failed:", err);
-      alert("Update failed!");
+      toast("Update failed!", { type: "error" });
     }
   };
 
   return (
-    
-    <div>
+    <div className="profile-page page-shell">
       <button onClick={() => navigate("/")} className="back-btn">
         ← Back
       </button>
 
-      <h1>Profile</h1>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Profile</h1>
+          <p className="page-subtitle">Update your contact and address information.</p>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit}>
+      <form className="profile-form card-surface" onSubmit={handleSubmit}>
         <input
           type="number"
           name="postalCode"
@@ -114,7 +119,6 @@ const navigate = useNavigate();
           value={user.postalCode}
           onChange={handleChange}
         />
-        <br />
 
         <input
           type="text"
@@ -123,7 +127,6 @@ const navigate = useNavigate();
           value={user.city}
           onChange={handleChange}
         />
-        <br />
 
         <input
           type="text"
@@ -132,7 +135,6 @@ const navigate = useNavigate();
           value={user.address}
           onChange={handleChange}
         />
-        <br />
 
         <input
           type="text"
@@ -141,9 +143,8 @@ const navigate = useNavigate();
           value={user.phone}
           onChange={handleChange}
         />
-        <br />
 
-        <button type="submit">Save</button>
+        <button className="btn-primary" type="submit">Save</button>
       </form>
     </div>
   );

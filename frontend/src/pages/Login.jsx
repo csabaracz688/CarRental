@@ -43,7 +43,7 @@ function Login() {
       const { token, role, userId, userName } = response.data;
 
       if (!token || typeof token !== "string" || !role || typeof role !== "string") {
-        setError("Hibás bejelentkeézs. Kérem, próbálja újra.");
+        setError("Invalid login response. Please try again.");
         return;
       }
 
@@ -51,7 +51,7 @@ function Login() {
       navigate(getHomeRouteByRole(role), { replace: true });
     } catch (err) {
       const responseMessage = err.response?.data?.message;
-      setError(responseMessage || "Hibás bejelentkezés. Kérem, próbálja újra.");
+      setError(responseMessage || "Login failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -103,7 +103,7 @@ function Login() {
         </button>
 
         <div className="seeded-users">
-          <p className="seeded-users-title">Generated test users</p>
+          <p className="seeded-users-title">Generated demo users</p>
           {SEEDED_USERS.map((seededUser) => (
             <div key={seededUser.email} className="seeded-user-row">
               <div className="seeded-user-meta">

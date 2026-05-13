@@ -1,13 +1,210 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap");
+
+:root {
+  --bg-0: #f2f5f7;
+  --bg-1: #ffffff;
+  --bg-2: #e6ecef;
+  --surface: rgba(255, 255, 255, 0.88);
+  --surface-strong: #ffffff;
+  --text-0: #0f1720;
+  --text-1: #334155;
+  --text-2: #607083;
+  --line: #d6e0e6;
+  --brand-700: #0f4d68;
+  --brand-600: #146284;
+  --brand-500: #1a789d;
+  --brand-300: #8eb6c9;
+  --accent-600: #0c7a68;
+  --accent-500: #149780;
+  --danger-600: #be334b;
+  --warning-600: #b07918;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --shadow-soft: 0 14px 30px rgba(18, 35, 52, 0.08);
+  --shadow-lift: 0 18px 36px rgba(18, 35, 52, 0.14);
+  --ring: 0 0 0 3px rgba(20, 98, 132, 0.2);
+  --container: 1180px;
+  --tr-fast: 140ms ease;
+  --tr-base: 220ms ease;
+}
+
 * {
   box-sizing: border-box;
 }
 
-html, body, #root {
-  height: 100%;
+html,
+body,
+#root {
+  min-height: 100%;
   margin: 0;
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background-color: #f4f6f8;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  color: var(--text-0);
+  background:
+    radial-gradient(1200px 500px at 8% -10%, rgba(20, 98, 132, 0.16), transparent 60%),
+    radial-gradient(900px 380px at 92% 0%, rgba(15, 122, 104, 0.14), transparent 66%),
+    linear-gradient(180deg, #f6f9fb 0%, #eef3f6 45%, #e9eff3 100%);
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Sora", "Manrope", sans-serif;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--text-0);
+}
+
+p {
+  color: var(--text-1);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.page-shell {
+  width: min(var(--container), calc(100% - 40px));
+  margin: 34px auto 56px;
+}
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.page-title {
+  font-size: clamp(1.65rem, 1.1rem + 1.9vw, 2.2rem);
+}
+
+.page-subtitle {
+  margin: 10px 0 0;
+  color: var(--text-2);
+  max-width: 72ch;
+}
+
+.back-btn {
+  border: 0;
+  background: transparent;
+  color: var(--brand-700);
+  font-weight: 700;
+  padding: 0;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: color var(--tr-fast);
+}
+
+.back-btn:hover {
+  color: var(--brand-500);
+}
+
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-ghost {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform var(--tr-fast), box-shadow var(--tr-fast), background-color var(--tr-fast), color var(--tr-fast);
+}
+
+.btn-primary {
+  color: #fff;
+  background: linear-gradient(125deg, var(--brand-700), var(--brand-500));
+  box-shadow: 0 10px 22px rgba(20, 98, 132, 0.26);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(20, 98, 132, 0.32);
+}
+
+.btn-secondary {
+  color: #fff;
+  background: linear-gradient(125deg, var(--accent-600), var(--accent-500));
+}
+
+.btn-danger {
+  color: #fff;
+  background: linear-gradient(125deg, #cf3f58, var(--danger-600));
+}
+
+.btn-ghost {
+  color: var(--brand-700);
+  background: rgba(20, 98, 132, 0.1);
+}
+
+.btn:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled,
+.btn-ghost:disabled {
+  opacity: 0.56;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.field,
+input,
+select,
+textarea {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+  color: var(--text-0);
+  background: var(--surface-strong);
+  transition: border-color var(--tr-fast), box-shadow var(--tr-fast);
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.field:focus {
+  border-color: var(--brand-600);
+  box-shadow: var(--ring);
+  outline: none;
+}
+
+.card-surface {
+  background: var(--surface);
+  border: 1px solid rgba(142, 182, 201, 0.24);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 780px) {
+  .page-shell {
+    width: calc(100% - 24px);
+    margin-top: 22px;
+  }
+
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

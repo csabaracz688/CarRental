@@ -1,0 +1,15 @@
+.profile-page {
+  margin-top: 34px;
+}
+
+.profile-form {
+  max-width: 560px;
+  padding: 22px;
+  display: grid;
+  gap: 11px;
+}
+
+.profile-form .btn-primary {
+  width: fit-content;
+  padding-inline: 18px;
+}

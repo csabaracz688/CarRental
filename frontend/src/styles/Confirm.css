@@ -1,0 +1,39 @@
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 12, 20, 0.28);
+  z-index: 10000;
+}
+
+.confirm-modal {
+  /* use the project's card surface tokens */
+  background: var(--surface-strong, #ffffff);
+  color: var(--text-0, #0f1720);
+  padding: 20px;
+  border-radius: var(--radius-md, 12px);
+  width: min(460px, calc(100% - 48px));
+  box-shadow: var(--shadow-lift, 0 18px 40px rgba(2,6,23,0.12));
+  border: 1px solid rgba(20,98,132,0.06);
+}
+
+.confirm-modal h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.05rem;
+  color: var(--text-0);
+}
+
+.confirm-modal p {
+  margin: 0 0 16px 0;
+  color: var(--text-1);
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Rely on global .btn, .btn-primary, .btn-ghost classes from index.css for consistent look */

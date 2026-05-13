@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import "../styles/AdminDashboard.css";
+import "../styles/Dashboard.css";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -17,25 +17,25 @@ export default function AdminDashboard() {
         <h1>Admin Dashboard</h1>
 
         <button className="logout-btn" onClick={handleLogout}>
-          Kijelentkezés
+          Logout
         </button>
       </div>
 
       <div className="cards">
         
         <div className="card">
-          <h2>Autók</h2>
-          <p>Összes autó kezelése</p>
+          <h2>Cars</h2>
+          <p>Manage all vehicles</p>
           <Link to="/admin/cars">
-            <button>Megnyitás</button>
+            <button>Open</button>
           </Link>
         </div>
 
         <div className="card">
-          <h2>Új autó</h2>
-          <p>Új autó hozzáadása</p>
+          <h2>Add Car</h2>
+          <p>Create a new vehicle entry</p>
           <Link to="/admin/add-car">
-            <button>Hozzáadás</button>
+            <button>Add</button>
           </Link>
         </div>
 
