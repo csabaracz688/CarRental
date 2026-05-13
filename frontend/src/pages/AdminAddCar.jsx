@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/AdminAddCar.css";
-import { useToast } from "../components/Toaster";
+import { useToast } from "../components/useToast";
 
 function AdminAddCar() {
   const [car, setCar] = useState({
@@ -20,8 +20,6 @@ function AdminAddCar() {
 
   const navigate = useNavigate();
   const toast = useToast();
-  const [saving, setSaving] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null);
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -37,7 +35,6 @@ function AdminAddCar() {
       ...car,
       image: file,
     });
-    if (file) setPreviewUrl(URL.createObjectURL(file));
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,8 +44,6 @@ function AdminAddCar() {
       toast("Please fill required fields (license, brand, model, price).", { type: "warning" });
       return;
     }
-
-    setSaving(true);
 
     try {
       const formData = new FormData();
@@ -86,8 +81,6 @@ function AdminAddCar() {
     } catch (err) {
       console.error("Create car error:", err);
       toast("Unable to create car.", { type: "error" });
-    } finally {
-      setSaving(false);
     }
   };
 

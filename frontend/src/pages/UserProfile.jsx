@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/UserProfile.css";
-import { useToast } from "../components/Toaster";
+import { useToast } from "../components/useToast";
 
 export default function Profile() {
   const [user, setUser] = useState({

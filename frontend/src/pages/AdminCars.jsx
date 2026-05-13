@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "../styles/AdminCars.css";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "../components/Toaster";
-import { useConfirm } from "../components/Confirm";
+import { useToast } from "../components/useToast";
+import { useConfirm } from "../components/useConfirm";
 
 export default function AdminCars() {
   const [cars, setCars] = useState([]);
@@ -12,7 +12,7 @@ export default function AdminCars() {
   const toast = useToast();
   const confirm = useConfirm();
 
-  const loadCars = async () => {
+  const loadCars = useCallback(async () => {
     try {
       const res = await fetch("https://localhost:7077/api/cars");
 
@@ -26,11 +26,12 @@ export default function AdminCars() {
     } catch (err) {
       console.error("Cars loading error:", err);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCars();
-  }, []);
+  }, [loadCars]);
 
   const deleteCar = async (id) => {
   const confirmed = await confirm("Are you sure you want to delete this car?");

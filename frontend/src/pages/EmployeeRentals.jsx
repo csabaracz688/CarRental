@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "../styles/EmployeeRentals.css";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "../components/Toaster";
+import { useToast } from "../components/useToast";
 
 export default function EmployeeRentals() {
   const [rentals, setRentals] = useState([]);
@@ -11,7 +11,7 @@ export default function EmployeeRentals() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const loadRentals = async () => {
+  const loadRentals = useCallback(async () => {
     try {
       const res = await fetch("https://localhost:7077/api/rentals", {
         headers: {
@@ -30,11 +30,12 @@ export default function EmployeeRentals() {
     } catch (err) {
       console.error("Rentals loading error:", err);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadRentals();
-  }, []);
+  }, [loadRentals]);
 
   const approveRental = async (id) => {
     const res = await fetch(`https://localhost:7077/api/rentals/${id}/approve`, {
@@ -117,35 +118,36 @@ export default function EmployeeRentals() {
     loadRentals();
   };
 
-const openInvoice = async (id) => {
-  const res = await fetch(`https://localhost:7077/api/rentals/${id}/invoice`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  const openInvoice = async (id) => {
+    const res = await fetch(`https://localhost:7077/api/rentals/${id}/invoice`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Invoice error:", res.status, text);
+      toast("Unable to open invoice!", { type: "error" });
+      return;
+    }
+
+    const html = await res.text();
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+
+    window.open(url, "_blank");
+  };
+
+  const filteredRentals = rentals.filter((rental) => {
+    if (!statusFilter) return true;
+
+    const status = (rental.statusText || rental.status || "")
+      .toString()
+      .toLowerCase();
+
+    return status === statusFilter.toLowerCase();
   });
-
-  if (!res.ok) {
-    const text = await res.text();
-    console.error("Invoice error:", res.status, text);
-    toast("Unable to open invoice!", { type: "error" });
-    return;
-  }
-
-  const html = await res.text();
-  const blob = new Blob([html], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
-
-  window.open(url, "_blank");
-};
-const filteredRentals = rentals.filter((rental) => {
-  if (!statusFilter) return true;
-
-  const status = (rental.statusText || rental.status || "")
-    .toString()
-    .toLowerCase();
-
-  return status === statusFilter.toLowerCase();
-});
 
   return (
     <div className="employee-rentals-page">

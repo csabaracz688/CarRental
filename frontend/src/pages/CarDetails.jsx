@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/CarDetails.css";
-import { useToast } from "../components/Toaster";
+import { useToast } from "../components/useToast";
 
 export default function CarDetails() {
   const { id } = useParams();

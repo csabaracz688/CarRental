@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import "../styles/Confirm.css";
-
-const ConfirmContext = createContext(null);
+import { ConfirmContext } from "./confirmContext";
 
 export function ConfirmProvider({ children }) {
   const [queue, setQueue] = useState([]);
@@ -39,12 +38,6 @@ export function ConfirmProvider({ children }) {
       ))}
     </ConfirmContext.Provider>
   );
-}
-
-export function useConfirm() {
-  const ctx = useContext(ConfirmContext);
-  if (!ctx) throw new Error("useConfirm must be used within ConfirmProvider");
-  return ctx;
 }
 
 export default ConfirmProvider;
