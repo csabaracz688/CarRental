@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "../styles/AdminCars.css";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../components/useToast";
+import { useConfirm } from "../components/useConfirm";
 
 export default function AdminCars() {
   const [cars, setCars] = useState([]);
   const [editingCar, setEditingCar] = useState(null);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
+  const toast = useToast();
+  const confirm = useConfirm();
 
-  const loadCars = async () => {
+  const loadCars = useCallback(async () => {
     try {
       const res = await fetch("https://localhost:7077/api/cars");
 
@@ -22,14 +26,15 @@ export default function AdminCars() {
     } catch (err) {
       console.error("Cars loading error:", err);
     }
-  };
-
-  useEffect(() => {
-    loadCars();
   }, []);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadCars();
+  }, [loadCars]);
+
   const deleteCar = async (id) => {
-  const confirmed = window.confirm("Biztosan törölni szeretnéd ezt az autót?");
+  const confirmed = await confirm("Are you sure you want to delete this car?");
   if (!confirmed) return;
 
   const res = await fetch(`https://localhost:7077/api/cars/${id}`, {
@@ -40,8 +45,8 @@ export default function AdminCars() {
   });
 
   if (res.status === 409) {
-    const shouldDeactivate = window.confirm(
-      "Az autóhoz aktív bérlés tartozik, ezért nem törölhető. Szeretnéd inkább inaktívvá tenni?"
+    const shouldDeactivate = await confirm(
+      "This car has an active rental and cannot be deleted. Do you want to deactivate it instead?"
     );
 
     if (!shouldDeactivate) return;
@@ -57,21 +62,21 @@ export default function AdminCars() {
     );
 
     if (!deactivateRes.ok) {
-      alert("Inaktiválás sikertelen!");
+      toast("Deactivation failed!", { type: "error" });
       return;
     }
 
-    alert("Autó inaktiválva!");
+    toast("Car has been deactivated!", { type: "success" });
     loadCars();
     return;
   }
 
   if (!res.ok) {
-    alert("Törlés sikertelen!");
+    toast("Delete failed!", { type: "error" });
     return;
   }
 
-  alert("Autó törölve!");
+  toast("Car deleted!", { type: "success" });
   loadCars();
 };
 
@@ -159,11 +164,11 @@ export default function AdminCars() {
     if (!res.ok) {
       const text = await res.text();
       console.error("Update error:", res.status, text);
-      alert("Módosítás sikertelen!");
+      toast("Update failed!", { type: "error" });
       return;
     }
 
-    alert("Autó módosítva!");
+    toast("Car updated!", { type: "success" });
     setEditingCar(null);
     loadCars();
   };
@@ -171,13 +176,13 @@ export default function AdminCars() {
   const getStatusText = (status) => {
     switch (Number(status)) {
       case 0:
-        return "Elérhető";
+        return "Available";
       case 1:
-        return "Nem elérhető";
+        return "Unavailable";
       case 2:
-        return "Kölcsönözve";
+        return "Rented";
       default:
-        return "Ismeretlen";
+        return "Unknown";
     }
   };
 
@@ -187,47 +192,47 @@ export default function AdminCars() {
         ← Back
       </button>
       <h1>Admin Cars</h1>
-      <p>Autók megtekintése, módosítása, törlése és státusz kezelése.</p>
+      <p>View, edit, remove, and manage car status.</p>
 
       {editingCar && (
         <div className="edit-modal-overlay">
           <div className="edit-modal">
-            <h2>Autó módosítása</h2>
+            <h2>Edit Car</h2>
 
             <form onSubmit={saveEdit}>
               <input
                 name="licensePlate"
-                placeholder="Rendszám"
+                placeholder="License plate"
                 value={editingCar.licensePlate}
                 onChange={handleEditChange}
               />
 
               <input
                 name="brand"
-                placeholder="Márka"
+                placeholder="Brand"
                 value={editingCar.brand}
                 onChange={handleEditChange}
               />
 
               <input
                 name="model"
-                placeholder="Típus"
+                placeholder="Model"
                 value={editingCar.model}
                 onChange={handleEditChange}
               />
-              <label>Kilométeróra:</label>
+              <label>Mileage:</label>
               <input
                 name="distanceKm"
                 type="number"
-                placeholder="Kilométeróra állás"
+                placeholder="Mileage"
                 value={editingCar.distanceKm}
                 onChange={handleEditChange}
               />
-              <label>Napi ár:</label>
+              <label>Daily price:</label>
               <input
                 name="dailyPrice"
                 type="number"
-                placeholder="Napi ár"
+                placeholder="Daily price"
                 value={editingCar.dailyPrice}
                 onChange={handleEditChange}
               />
@@ -237,18 +242,18 @@ export default function AdminCars() {
                 value={editingCar.status}
                 onChange={handleEditChange}
               >
-                <option value={0}>Elérhető</option>
-                <option value={1}>Nem elérhető</option>
-                <option value={2}>Kölcsönözve</option>
+                <option value={0}>Available</option>
+                <option value={1}>Unavailable</option>
+                <option value={2}>Rented</option>
               </select>
 
-              <label>Kép módosítása:</label>
+              <label>Change image:</label>
 
               {editingCar.previewImageUrl && (
                 <img
                   className="edit-image-preview"
                   src={editingCar.previewImageUrl}
-                  alt="Autó előnézet"
+                  alt="Car preview"
                 />
               )}
 
@@ -258,7 +263,7 @@ export default function AdminCars() {
                 onChange={handleImageChange}
               />
 
-              <label>Nem elérhető ettől:</label>
+              <label>Unavailable from:</label>
               <input
                 name="unavailableFrom"
                 type="date"
@@ -266,7 +271,7 @@ export default function AdminCars() {
                 onChange={handleEditChange}
               />
 
-              <label>Nem elérhető eddig:</label>
+              <label>Unavailable to:</label>
               <input
                 name="unavailableTo"
                 type="date"
@@ -279,22 +284,22 @@ export default function AdminCars() {
                 value={editingCar.unavailableReason}
                 onChange={handleEditChange}
               >
-                <option value="">Nincs indok</option>
-                <option value={0}>Szerviz</option>
-                <option value={1}>Sérült</option>
-                <option value={2}>Admin tiltás</option>
+                <option value="">No reason</option>
+                <option value={0}>Service</option>
+                <option value={1}>Damaged</option>
+                <option value={2}>Admin hold</option>
               </select>
 
               <textarea
                 name="unavailableNote"
-                placeholder="Megjegyzés"
+                placeholder="Note"
                 value={editingCar.unavailableNote}
                 onChange={handleEditChange}
               />
 
               <div className="modal-actions">
                 <button type="submit" className="save-btn">
-                  Mentés
+                  Save
                 </button>
 
                 <button
@@ -302,7 +307,7 @@ export default function AdminCars() {
                   className="cancel-btn"
                   onClick={() => setEditingCar(null)}
                 >
-                  Mégse
+                  Cancel
                 </button>
               </div>
             </form>
@@ -325,41 +330,41 @@ export default function AdminCars() {
               </h2>
 
               <p>
-                <strong>Rendszám:</strong> {car.licensePlate}
+                <strong>License plate:</strong> {car.licensePlate}
               </p>
 
               <p>
-                <strong>Kilométeróra:</strong> {car.distanceKm} km
+                <strong>Mileage:</strong> {car.distanceKm} km
               </p>
 
               <p>
-                <strong>Napi ár:</strong> {car.dailyPrice} Ft
+                <strong>Daily price:</strong> {car.dailyPrice} Ft
               </p>
 
               <p>
-                <strong>Státusz:</strong> {getStatusText(car.status)}
+                <strong>Status:</strong> {getStatusText(car.status)}
               </p>
 
               <p>
-                <strong>Nem elérhető:</strong>{" "}
+                <strong>Unavailable period:</strong>{" "}
                 {car.unavailableFrom && car.unavailableTo
                   ? `${new Date(car.unavailableFrom).toLocaleDateString()} - ${new Date(
                       car.unavailableTo
                     ).toLocaleDateString()}`
-                  : "Nincs megadva"}
+                  : "Not set"}
               </p>
 
               <p>
-                <strong>Megjegyzés:</strong> {car.unavailableNote || "-"}
+                <strong>Note:</strong> {car.unavailableNote || "-"}
               </p>
 
               <div className="admin-car-actions">
                 <button className="edit-btn" onClick={() => startEdit(car)}>
-                  Módosítás
+                  Edit
                 </button>
 
                 <button className="delete-btn" onClick={() => deleteCar(car.id)}>
-                  Törlés
+                  Delete
                 </button>
               </div>
             </div>

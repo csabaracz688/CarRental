@@ -5,7 +5,6 @@ using CarRental.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
 
 namespace CarRental.WebApi.Controllers;
 
@@ -24,7 +23,8 @@ public class CarsController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAll() => Ok(await _cars.GetAllAsync());
+    public async Task<IActionResult> GetAll()
+        => Ok(await _cars.GetAllAsync());
 
     [HttpGet("{id:int}")]
     [AllowAnonymous]
@@ -38,16 +38,30 @@ public class CarsController : ControllerBase
     [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Create([FromForm] CreateCarDto dto)
     {
-
-        var created = await _cars.CreateAsync(dto);
-
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        try
+        {
+            var created = await _cars.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = nameof(RoleTypes.Admin))]
     public async Task<IActionResult> Update(int id, [FromForm] UpdateCarDto dto)
-        => await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+    {
+        try
+        {
+            return await _cars.UpdateAsync(id, dto) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 
     [HttpDelete("{id:int}")]
     [Authorize(Roles = nameof(RoleTypes.Admin))]
@@ -61,18 +75,17 @@ public class CarsController : ControllerBase
         {
             return Conflict(new
             {
-                message = "Az autóhoz tartozikaktív vagy korábbi bérlés, ezért nem törölhetõ."
+                message = "The car has active or previous rentals and cannot be deleted."
             });
         }
     }
 
-    // GET: api/cars/{id}/availability?start=2026-03-11&end=2026-03-14
     [HttpGet("{id:int}/availability")]
     [AllowAnonymous]
     public async Task<IActionResult> Availability(
-      int id,
-      [FromQuery] DateTime start,
-      [FromQuery] DateTime end)
+        int id,
+        [FromQuery] DateTime start,
+        [FromQuery] DateTime end)
     {
         var car = await _db.Cars
             .AsNoTracking()
@@ -140,11 +153,13 @@ public class CarsController : ControllerBase
 
         return Ok(rentals);
     }
+
     [HttpGet("search")]
+    [AllowAnonymous]
     public async Task<IActionResult> Search(
-    [FromQuery] DateTime start,
-    [FromQuery] DateTime end,
-    CancellationToken cancellationToken)
+        [FromQuery] DateTime start,
+        [FromQuery] DateTime end,
+        CancellationToken cancellationToken)
     {
         if (end <= start)
         {
@@ -174,7 +189,7 @@ public class CarsController : ControllerBase
         car.Status = CarStatus.Unavailable;
         car.UnavailableFrom = DateTime.UtcNow;
         car.UnavailableReason = CarUnavailableReason.AdminHold;
-        car.UnavailableNote = "Admin által inaktiválva.";
+        car.UnavailableNote = "Deactivated by admin.";
 
         await _db.SaveChangesAsync();
 

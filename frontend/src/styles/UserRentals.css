@@ -1,32 +1,31 @@
 .user-rentals-page {
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 20px;
+  width: min(var(--container), calc(100% - 34px));
+  margin: 34px auto 48px;
 }
 
 .user-rentals-page h1 {
-  margin-bottom: 25px;
-  text-align: center;
+  margin-bottom: 18px;
+  font-size: clamp(1.6rem, 1.2rem + 1.3vw, 2.1rem);
 }
 
 .empty-text {
-  text-align: center;
-  color: #666;
+  color: var(--text-2);
 }
 
 .rentals-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
 .rental-card {
   display: flex;
-  gap: 20px;
-  background: #fff;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  padding: 14px;
+  border: 1px solid rgba(145, 185, 205, 0.32);
+  box-shadow: var(--shadow-soft);
   align-items: center;
 }
 
@@ -35,7 +34,7 @@
   height: 150px;
   object-fit: cover;
   border-radius: 12px;
-  background: #eee;
+  background: #d9e7ef;
 }
 
 .rental-info {
@@ -48,7 +47,11 @@
 
 .rental-info p {
   margin: 6px 0;
-  color: #444;
+  color: var(--text-1);
+}
+
+.back-btn {
+  margin-bottom: 12px;
 }
 
 @media (max-width: 700px) {
@@ -61,17 +64,4 @@
     width: 100%;
     height: 200px;
   }
-
-  .back-btn {
-  margin-bottom: 20px;
-  background: transparent;
-  border: none;
-  color: #007bff;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.back-btn:hover {
-  text-decoration: underline;
-}
 }

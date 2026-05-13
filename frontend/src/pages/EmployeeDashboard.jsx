@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import "../styles/EmployeeDashboard.css";
+import "../styles/Dashboard.css";
 
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
@@ -15,10 +15,10 @@ export default function EmployeeDashboard() {
       
       {/* HEADER */}
       <div className="header">
-        <h1>Ügyintéző Dashboard</h1>
+        <h1>Employee Dashboard</h1>
 
         <button className="logout-btn" onClick={handleLogout}>
-          Kijelentkezés
+          Logout
         </button>
       </div>
 
@@ -26,18 +26,18 @@ export default function EmployeeDashboard() {
       <div className="cards">
 
         <div className="card">
-          <h2>Kölcsönzések</h2>
-          <p>Aktív és korábbi bérlések</p>
+          <h2>Rentals</h2>
+          <p>Active and past rentals</p>
           <Link to="/employee/rentals">
-            <button>Megnyitás</button>
+            <button>Open</button>
           </Link>
         </div>
 
         <div className="card">
           <h2>Autók</h2>
-          <p>Elérhető autók megtekintése</p>
+          <p>Browse available cars</p>
           <Link to="/">
-            <button>Megtekintés</button>
+            <button>Browse</button>
           </Link>
         </div>
 

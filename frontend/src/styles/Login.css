@@ -1,98 +1,98 @@
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background-color: #f4f6f8;
-}
-
-/* Center container */
 .auth-container {
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 100vh;
+  justify-content: center;
+  padding: 28px 14px;
 }
 
-/* Form box */
 .auth-form {
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  width: min(420px, calc(100vw - 32px));
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  width: min(480px, 100%);
+  padding: 34px 28px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(240, 248, 252, 0.92));
+  border: 1px solid rgba(151, 191, 209, 0.3);
+  box-shadow: var(--shadow-lift);
 }
 
-/* Title */
 .auth-form h2 {
   text-align: center;
   margin-bottom: 20px;
+  font-size: clamp(1.65rem, 1.3rem + 1vw, 2rem);
 }
 
-/* Inputs stacked vertically */
+.auth-error {
+  color: #a32137;
+  background: #ffe8ec;
+  border: 1px solid #f8bcc8;
+  border-radius: 12px;
+  padding: 9px 11px;
+  margin: 0 0 12px;
+}
+
 .auth-form input {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 12px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  margin-bottom: 11px;
 }
 
-/* Button */
-.auth-form button {
+.auth-form > button {
   width: 100%;
-  padding: 10px;
-  border: none;
-  background-color: #2563eb;
-  color: white;
-  border-radius: 5px;
-  font-size: 16px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 999px;
+  padding: 11px;
+  color: #fff;
+  font-weight: 700;
+  background: linear-gradient(125deg, var(--brand-700), var(--brand-500));
+  box-shadow: 0 12px 26px rgba(15, 89, 120, 0.28);
   cursor: pointer;
 }
 
-.auth-form button:hover {
-  background-color: #1e4fd1;
+.auth-form > button:hover {
+  transform: translateY(-1px);
 }
 
-.auth-form button:disabled {
-  opacity: 0.65;
+.auth-form > button:disabled {
+  opacity: 0.58;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .seeded-users {
-  margin-top: 14px;
+  margin-top: 16px;
+  border: 1px solid rgba(154, 189, 205, 0.35);
+  border-radius: 14px;
   padding: 12px;
-  border: 1px solid #dbe6f8;
-  border-radius: 8px;
-  background-color: #f8fbff;
+  background: rgba(227, 243, 251, 0.42);
 }
 
 .seeded-users-title {
   margin: 0 0 10px;
-  font-size: 14px;
-  font-weight: bold;
-  color: #1f3a5f;
+  color: var(--brand-700);
+  font-weight: 700;
 }
 
 .seeded-user-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 8px 0;
 }
 
 .seeded-user-row + .seeded-user-row {
-  border-top: 1px dashed #d9e3f3;
+  border-top: 1px dashed rgba(137, 178, 196, 0.5);
 }
 
 .seeded-user-meta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 13px;
+  gap: 1px;
+  font-size: 0.87rem;
 }
 
 .seeded-user-meta span {
-  color: #475569;
+  color: var(--text-2);
 }
 
 .seeded-user-actions {
@@ -102,50 +102,37 @@ body {
 
 .seeded-fill-btn,
 .seeded-login-btn {
-  width: auto !important;
-  font-size: 12px;
-  padding: 7px 10px !important;
-  white-space: nowrap;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.75rem;
+  color: #fff;
+  cursor: pointer;
 }
 
 .seeded-fill-btn {
-  background-color: #64748b !important;
-}
-
-.seeded-fill-btn:hover {
-  background-color: #475569 !important;
+  background: linear-gradient(125deg, #4a5f75, #36485b);
 }
 
 .seeded-login-btn {
-  background-color: #0b7a52 !important;
+  background: linear-gradient(125deg, var(--accent-600), var(--accent-500));
 }
 
-.seeded-login-btn:hover {
-  background-color: #066543 !important;
-}
-
-/* bottom text */
 .auth-link {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 14px;
+  color: var(--text-2);
 }
 
 .auth-link a {
-  color: #2563eb;
+  color: var(--brand-700);
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 700;
 }
 
-@media (max-width: 520px) {
-  .auth-container {
-    align-items: flex-start;
-    padding: 20px 0;
-    height: auto;
-    min-height: 100vh;
-  }
-
+@media (max-width: 560px) {
   .auth-form {
-    padding: 22px;
+    padding: 26px 18px;
   }
 
   .seeded-user-row {
@@ -159,6 +146,6 @@ body {
 
   .seeded-fill-btn,
   .seeded-login-btn {
-    flex: 1;
+    width: 100%;
   }
 }
