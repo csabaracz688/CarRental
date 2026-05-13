@@ -365,3 +365,4 @@ FodyWeavers.xsd
 frontend/obj/
 frontend/obj/
 frontend/obj\\
+CarRental.Api/wwwroot/uploads

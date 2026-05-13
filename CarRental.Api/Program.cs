@@ -140,6 +140,19 @@ app.UseAuthorization();
 
 app.UseStaticFiles();
 
+// Serve uploaded files from the uploads directory
+var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+
 app.MapControllers();
 
 app.Run();
