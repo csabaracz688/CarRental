@@ -5,7 +5,11 @@ import "../styles/CarDetails.css";
 export default function CarDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
+  const isEmployee = role?.toLowerCase() === "officer";
 
   const [car, setCar] = useState(null);
   const [start, setStart] = useState("");
@@ -35,14 +39,20 @@ export default function CarDetails() {
       return false;
     }
 
-    const res = await fetch(
-      `https://localhost:7077/api/cars/${id}/availability?start=${start}&end=${end}`
-    );
+    try {
+      const res = await fetch(
+        `https://localhost:7077/api/cars/${id}/availability?start=${start}&end=${end}`
+      );
 
-    const data = await res.json();
-    setAvailability(data);
+      const data = await res.json();
+      setAvailability(data);
 
-    return data.isAvailable;
+      return data.isAvailable;
+    } catch (err) {
+      console.error("Availability check error:", err);
+      alert("Failed to check availability!");
+      return false;
+    }
   };
 
   const handleBooking = async () => {
@@ -119,74 +129,97 @@ export default function CarDetails() {
           </h2>
 
           <p className="price">{car.dailyPrice} Ft / day</p>
-          <p>Kilometers: {car.distanceKm}</p>
 
-          <div className="booking-section">
-            <h3>Booking</h3>
+          <p>
+            <strong>Kilometers:</strong> {car.distanceKm}
+          </p>
 
-            <input
-              type="date"
-              value={start}
-              onChange={(e) => {
-                setStart(e.target.value);
-                setAvailability(null);
-              }}
-            />
+          <p>
+            <strong>License Plate:</strong> {car.licensePlate}
+          </p>
 
-            <input
-              type="date"
-              value={end}
-              onChange={(e) => {
-                setEnd(e.target.value);
-                setAvailability(null);
-              }}
-            />
+          <p>
+            <strong>Status:</strong>{" "}
+            {car.status === 0 ? "Available" : "Unavailable"}
+          </p>
 
-            {!token && (
-              <>
-                <input
-                  type="text"
-                  placeholder="Name"
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                />
+          {isEmployee ? (
+            <div className="employee-view">
+              <h3>Employee view</h3>
 
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={guestEmail}
-                  onChange={(e) => setGuestEmail(e.target.value)}
-                />
-
-                <input
-                  type="text"
-                  placeholder="Phone"
-                  value={guestPhone}
-                  onChange={(e) => setGuestPhone(e.target.value)}
-                />
-              </>
-            )}
-
-            <button className="book-btn" onClick={checkAvailability}>
-              Check availability
-            </button>
-
-            {availability && (
-              <p className="availability">
-                {availability.isAvailable
-                  ? "Available ✅"
-                  : `Not available ❌ ${availability.reason || ""}`}
+              <p>
+                You can view the car details, but booking is disabled for
+                employees.
               </p>
-            )}
+            </div>
+          ) : (
+            <div className="booking-section">
+              <h3>Booking</h3>
 
-            <button
-              className="book-btn"
-              onClick={handleBooking}
-              disabled={loading}
-            >
-              {loading ? "Booking..." : "Book now"}
-            </button>
-          </div>
+              <input
+                type="date"
+                value={start}
+                onChange={(e) => {
+                  setStart(e.target.value);
+                  setAvailability(null);
+                }}
+              />
+
+              <input
+                type="date"
+                value={end}
+                onChange={(e) => {
+                  setEnd(e.target.value);
+                  setAvailability(null);
+                }}
+              />
+
+              {!token && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                  />
+
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Phone"
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                  />
+                </>
+              )}
+
+              <button className="book-btn" onClick={checkAvailability}>
+                Check availability
+              </button>
+
+              {availability && (
+                <p className="availability">
+                  {availability.isAvailable
+                    ? "Available ✅"
+                    : `Not available ❌ ${availability.reason || ""}`}
+                </p>
+              )}
+
+              <button
+                className="book-btn"
+                onClick={handleBooking}
+                disabled={loading}
+              >
+                {loading ? "Booking..." : "Book now"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
