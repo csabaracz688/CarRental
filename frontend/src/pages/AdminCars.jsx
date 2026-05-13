@@ -5,12 +5,20 @@ import { useToast } from "../components/useToast";
 import { useConfirm } from "../components/useConfirm";
 
 export default function AdminCars() {
+  const getImageSrc = (imageUrl) => {
+    if (!imageUrl) return "https://via.placeholder.com/400x250";
+    if (imageUrl.startsWith("http")) return imageUrl;
+    return `${API_URL}${imageUrl}`;
+  };
   const [cars, setCars] = useState([]);
   const [editingCar, setEditingCar] = useState(null);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const toast = useToast();
   const confirm = useConfirm();
+  const API_URL = "https://localhost:7077";
+
+  
 
   const loadCars = useCallback(async () => {
     try {
@@ -320,7 +328,8 @@ export default function AdminCars() {
           <div key={car.id} className="admin-car-card">
             <img
               className="admin-car-image"
-              src={car.imageUrl || "https://via.placeholder.com/300x180"}
+              src={car.imageUrl ? `https://localhost:7077${car.imageUrl}`
+      : "https://via.placeholder.com/400x250"}
               alt={`${car.brand} ${car.model}`}
             />
 

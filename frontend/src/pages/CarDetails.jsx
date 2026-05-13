@@ -24,11 +24,15 @@ export default function CarDetails() {
   const [guestPhone, setGuestPhone] = useState("");
 
   useEffect(() => {
-    fetch(`https://localhost:7077/api/cars/${id}`)
-      .then((res) => res.json())
-      .then(setCar)
-      .catch((err) => console.error("Car loading error:", err));
-  }, [id]);
+  fetch(`https://localhost:7077/api/cars/${id}`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("DETAIL CAR:", data);
+      console.log("DETAIL IMAGE:", data.imageUrl);
+      setCar(data);
+    })
+    .catch((err) => console.error("Car loading error:", err));
+}, [id]);
 
   const checkAvailability = async () => {
     if (!start || !end) {
@@ -121,7 +125,7 @@ export default function CarDetails() {
       <div className="car-details-card">
         <img
           className="car-details-image"
-          src={car.imageUrl || "https://via.placeholder.com/400x250"}
+          src={car.imageUrl ? `https://localhost:7077${car.imageUrl}` : "https://via.placeholder.com/400x250"}
           alt={`${car.brand} ${car.model}`}
         />
 

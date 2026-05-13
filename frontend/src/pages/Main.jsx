@@ -127,7 +127,9 @@ export default function MainPage() {
           <div className="hero-right">
             {featuredCar ? (
               <div className="hero-featured" onClick={() => navigate(`/cars/${featuredCar.id}`)}>
-                <img src={featuredCar.imageUrl || "https://via.placeholder.com/640x360"} alt={`${featuredCar.brand} ${featuredCar.model}`} />
+                <img src={featuredCar.imageUrl ? `https://localhost:7077${featuredCar.imageUrl}`
+      : "https://via.placeholder.com/400x250"} 
+      alt={`${featuredCar.brand} ${featuredCar.model}`} />
                 <div className="featured-badge">{featuredCar.brand} {featuredCar.model}</div>
               </div>
             ) : (
@@ -180,7 +182,8 @@ export default function MainPage() {
                 onClick={() => navigate(`/cars/${car.id}`)}
               >
                 <img
-                  src={car.imageUrl || "https://via.placeholder.com/300"}
+                  src={car.imageUrl ? `https://localhost:7077${car.imageUrl}`
+      : "https://via.placeholder.com/400x250"}
                   alt={`${car.brand} ${car.model}`}
                 />
 
