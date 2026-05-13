@@ -112,10 +112,6 @@ export default function MainPage() {
             </p>
 
             <div className="hero-ctas">
-              <Link to="/" className="btn btn-primary" aria-label="Browse cars">
-                Browse cars
-              </Link>
-
               {!token && (
                 <Link to="/register" className="btn btn-ghost" aria-label="Create account">
                   Create account

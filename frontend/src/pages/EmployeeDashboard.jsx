@@ -22,7 +22,7 @@ export default function EmployeeDashboard() {
         </button>
       </div>
 
-      {/* KÁRTYÁK */}
+      {/* CARDS */}
       <div className="cards">
 
         <div className="card">
@@ -34,7 +34,7 @@ export default function EmployeeDashboard() {
         </div>
 
         <div className="card">
-          <h2>Autók</h2>
+          <h2>Cars</h2>
           <p>Browse available cars</p>
           <Link to="/">
             <button>Browse</button>

@@ -21,6 +21,7 @@
   font-family: "Sora", sans-serif;
   font-size: clamp(1.2rem, 1rem + 0.9vw, 1.72rem);
   font-weight: 700;
+  color: #f3fbff;
 }
 
 .search-container {
