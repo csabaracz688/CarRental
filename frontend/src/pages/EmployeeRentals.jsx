@@ -107,8 +107,8 @@ export default function EmployeeRentals() {
     });
 
     if (!res.ok) {
-      const text = await res.text();
-      console.error("Close error:", res.status, text);
+      const error = await res.json().catch(() => null);
+      console.error("Close error:", res.status, error?.message || "No error message");
       toast("Close failed!", { type: "error" });
       return;
     }

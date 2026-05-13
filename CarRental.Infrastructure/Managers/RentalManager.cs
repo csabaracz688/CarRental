@@ -248,38 +248,30 @@ public class RentalManager : IRentalManager
     public async Task<bool> CloseAsync(int rentalId, CancellationToken ct = default)
     {
         var rental = await _db.Rentals
-            .Include(r => r.Car)
-            .Include(r => r.User)
-            .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+        .Include(r => r.Car)
+        .Include(r => r.User)
+        .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
 
         if (rental is null) return false;
 
         if (rental.Status == CarRentStatus.Returned)
             throw new ArgumentException("Rental is already closed.");
 
+        if (rental.HandedOverAt is null)
+            throw new ArgumentException("Rental cannot be closed before handover.");
+
+        var closedAt = DateTime.UtcNow;
+
+        if (closedAt < rental.HandedOverAt.Value)
+            throw new ArgumentException("Rental cannot be closed before handover date.");
+
         rental.Status = CarRentStatus.Returned;
-        rental.ClosedAt = DateTime.UtcNow;
+        rental.ClosedAt = closedAt;
 
-        if (rental.Car != null)
-        {
-            var hasActiveRentals = await _db.Rentals.AnyAsync(r =>
-                r.CarId == rental.CarId &&
-                r.Id != rental.Id &&
-                (
-                    r.Status == CarRentStatus.Approved ||
-                    r.Status == CarRentStatus.Handed
-                ),
-                ct
-            );
+        var days = (closedAt.Date - rental.HandedOverAt.Value.Date).Days;
 
-            if (!hasActiveRentals && rental.Car.Status == CarStatus.Rented)
-            {
-                rental.Car.Status = CarStatus.Available;
-            }
-        }
-
-        var days = (rental.EndDate.Date - rental.StartDate.Date).Days;
-        if (days <= 0) days = 1;
+        if (days <= 0)
+            days = 1;
 
         var dailyPrice = rental.Car.DailyPrice;
         var totalPrice = days * dailyPrice;
@@ -307,8 +299,10 @@ public class RentalManager : IRentalManager
             <p><strong>License plate:</strong> {rental.Car.LicensePlate}</p>
 
             <h3>Rental details</h3>
-            <p><strong>Start date:</strong> {rental.StartDate:yyyy-MM-dd}</p>
-            <p><strong>End date:</strong> {rental.EndDate:yyyy-MM-dd}</p>
+            <p><strong>Requested start:</strong> {rental.StartDate:yyyy-MM-dd}</p>
+            <p><strong>Requested end:</strong> {rental.EndDate:yyyy-MM-dd}</p>
+            <p><strong>Handed over at:</strong> {rental.HandedOverAt:yyyy-MM-dd HH:mm}</p>
+            <p><strong>Closed at:</strong> {closedAt:yyyy-MM-dd HH:mm}</p>
             <p><strong>Rental days:</strong> {days}</p>
 
             <h3>Payment</h3>
@@ -331,14 +325,19 @@ public class RentalManager : IRentalManager
     public async Task<string?> GetInvoiceHtmlAsync(int rentalId, CancellationToken ct = default)
     {
         var rental = await _db.Rentals
-            .Include(r => r.Car)
-            .Include(r => r.User)
-            .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
+        .Include(r => r.Car)
+        .Include(r => r.User)
+        .FirstOrDefaultAsync(r => r.Id == rentalId, ct);
 
         if (rental is null) return null;
 
-        var days = (rental.EndDate.Date - rental.StartDate.Date).Days;
-        if (days <= 0) days = 1;
+        if (rental.HandedOverAt is null || rental.ClosedAt is null)
+            return null;
+
+        var days = (rental.ClosedAt.Value.Date - rental.HandedOverAt.Value.Date).Days;
+
+        if (days <= 0)
+            days = 1;
 
         var dailyPrice = rental.Car.DailyPrice;
         var totalPrice = days * dailyPrice;
@@ -366,9 +365,11 @@ public class RentalManager : IRentalManager
             <p><strong>License plate:</strong> {rental.Car.LicensePlate}</p>
 
             <h3>Rental details</h3>
-            <p><strong>Start date:</strong> {rental.StartDate:yyyy-MM-dd}</p>
-            <p><strong>End date:</strong> {rental.EndDate:yyyy-MM-dd}</p>
-            <p><strong>Days:</strong> {days}</p>
+            <p><strong>Requested start:</strong> {rental.StartDate:yyyy-MM-dd}</p>
+            <p><strong>Requested end:</strong> {rental.EndDate:yyyy-MM-dd}</p>
+            <p><strong>Handed over at:</strong> {rental.HandedOverAt:yyyy-MM-dd HH:mm}</p>
+            <p><strong>Closed at:</strong> {rental.ClosedAt:yyyy-MM-dd HH:mm}</p>
+            <p><strong>Billed days:</strong> {days}</p>
 
             <h3>Payment</h3>
             <p><strong>Daily price:</strong> {dailyPrice} Ft</p>

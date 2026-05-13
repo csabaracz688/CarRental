@@ -95,7 +95,16 @@ public class RentalsController : ControllerBase
     [HttpPost("{id:int}/close")]
     [Authorize(Roles = $"{nameof(RoleTypes.Admin)},{nameof(RoleTypes.Officer)}")]
     public async Task<IActionResult> Close(int id)
-        => await _rentals.CloseAsync(id) ? NoContent() : NotFound();
+    {
+        try
+        {
+            return await _rentals.CloseAsync(id) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 
     private static int? TryGetCurrentUserId(ClaimsPrincipal user)
     {
