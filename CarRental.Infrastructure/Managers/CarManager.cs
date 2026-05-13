@@ -12,6 +12,7 @@ public class CarManager : ICarManager
     private readonly CarRentalDbContext _db;
 
     public CarManager(CarRentalDbContext db) => _db = db;
+
     private static readonly CarRentStatus[] BlockingStatuses =
     {
         CarRentStatus.Requested,
@@ -21,7 +22,7 @@ public class CarManager : ICarManager
 
     private static string? BuildImageUrl(string? imagePath)
         => imagePath != null
-            ? $"https://localhost:7077/uploads/{imagePath}"
+            ? $"/uploads/{imagePath}"
             : null;
 
     public async Task<List<CarResponseDto>> GetAllAsync(CancellationToken ct = default)
@@ -70,25 +71,34 @@ public class CarManager : ICarManager
 
     public async Task<CarResponseDto> CreateAsync(CreateCarDto dto, CancellationToken ct = default)
     {
+        var licensePlate = dto.LicensePlate.Trim().ToUpper();
+
+        var licensePlateExists = await _db.Cars.AnyAsync(
+            c => c.LicensePlate == licensePlate,
+            ct);
+
+        if (licensePlateExists)
+            throw new ArgumentException("License plate is already in use.");
+
         string? fileName = null;
 
         if (dto.Image != null)
         {
-            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
-            fileName = Guid.NewGuid() + Path.GetExtension(dto.Image.FileName);
+            fileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.Image.FileName)}";
             var path = Path.Combine(folder, fileName);
 
-            using var stream = new FileStream(path, FileMode.Create);
+            await using var stream = new FileStream(path, FileMode.Create);
             await dto.Image.CopyToAsync(stream, ct);
         }
 
         var car = new Car
         {
-            LicensePlate = dto.LicensePlate,
+            LicensePlate = licensePlate,
             Brand = dto.Brand,
             Model = dto.Model,
             DistanceKm = dto.DistanceKm,
@@ -134,7 +144,16 @@ public class CarManager : ICarManager
         var car = await _db.Cars.FirstOrDefaultAsync(c => c.Id == id, ct);
         if (car is null) return false;
 
-        car.LicensePlate = dto.LicensePlate;
+        var licensePlate = dto.LicensePlate.Trim().ToUpper();
+
+        var licensePlateExists = await _db.Cars.AnyAsync(
+            c => c.Id != id && c.LicensePlate == licensePlate,
+            ct);
+
+        if (licensePlateExists)
+            throw new ArgumentException("License plate is already in use.");
+
+        car.LicensePlate = licensePlate;
         car.Brand = dto.Brand;
         car.Model = dto.Model;
         car.DistanceKm = dto.DistanceKm;
@@ -150,7 +169,7 @@ public class CarManager : ICarManager
 
         if (dto.Image != null)
         {
-            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
@@ -163,15 +182,16 @@ public class CarManager : ICarManager
                     File.Delete(oldPath);
             }
 
-            var fileName = Guid.NewGuid() + Path.GetExtension(dto.Image.FileName);
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.Image.FileName)}";
             var path = Path.Combine(folder, fileName);
 
-            using var stream = new FileStream(path, FileMode.Create);
+            await using var stream = new FileStream(path, FileMode.Create);
             await dto.Image.CopyToAsync(stream, ct);
 
             car.ImagePath = fileName;
         }
-            await _db.SaveChangesAsync(ct); 
+
+        await _db.SaveChangesAsync(ct);
         return true;
     }
 
@@ -189,7 +209,8 @@ public class CarManager : ICarManager
         {
             var path = Path.Combine(
                 Directory.GetCurrentDirectory(),
-                "wwwroot/uploads",
+                "wwwroot",
+                "uploads",
                 car.ImagePath
             );
 
@@ -203,10 +224,9 @@ public class CarManager : ICarManager
     }
 
     public async Task<List<CarSearchResultDto>> SearchAsync(
-    CarSearchRequestDto request,
-    CancellationToken cancellationToken)
+        CarSearchRequestDto request,
+        CancellationToken cancellationToken)
     {
-
         return await _db.Cars
             .AsNoTracking()
             .Select(car => new
@@ -247,11 +267,11 @@ public class CarManager : ICarManager
                             .DefaultIfEmpty()
                             .Max()
                         : null,
+
                 Reason = (x.car.Status != CarStatus.Available || x.HasManualBlock)
                     ? x.car.UnavailableReason
                     : null
             })
             .ToListAsync(cancellationToken);
     }
-
 }
